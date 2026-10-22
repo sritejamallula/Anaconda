@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Anaconda: Amazon River Apex 3D</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 3D WebGL Canvas Container -->
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
+  </div>
+
+  <!-- Thermal Vision CRT Scanline Screen Overlay -->
+  <div id="thermal-overlay">
+    <div class="thermal-scanlines"></div>
+  </div>
+
+  <!-- In-Game UI Layer -->
+  <div id="ui-overlay">
+    <!-- Top HUD Bar -->
+    <div class="top-bar">
+      <!-- Player Stats -->
+      <div class="stats-panel interactive">
+        <div class="stat-row">
+          <span>Health</span>
+          <div class="bar-container">
+            <div id="health-fill" class="bar-fill"></div>
+          </div>
+        </div>
+        <div class="stat-row">
+          <span>Stamina</span>
+          <div class="bar-container">
+            <div id="stamina-fill" class="bar-fill"></div>
+          </div>
+        </div>
+        <div class="stat-row">
+          <span>Satiety</span>
+          <div class="bar-container">
+            <div id="hunger-fill" class="bar-fill"></div>
+          </div>
+        </div>
+        <div class="info-display">
+          <div class="info-item">SCORE: <span id="score-val">0</span></div>
+          <div class="info-item">LENGTH: <span id="length-val">6.5m</span></div>
+          <div class="info-item">APEX: <span id="apex-val">Rank 1</span></div>
+        </div>
+      </div>
+
+      <!-- Quick Action Controls -->
+      <div class="controls-panel interactive">
+        <button id="btn-thermal" class="hud-btn" title="Toggle Thermal Pit Vision (T)">[T] THERMAL</button>
+        <button id="btn-camera" class="hud-btn" title="Cycle Camera Views (C)">[C] CAMERA</button>
+        <button id="btn-audio" class="hud-btn active" title="Mute Audio (M)">[M] AUDIO</button>
+      </div>
+    </div>
+
+    <!-- Center Reticle / Strike Crosshair -->
+    <div id="crosshair">
+      <div class="crosshair-circle"></div>
+    </div>
+
+    <!-- Boss Encounter Health Bar -->
+    <div id="boss-bar-panel">
+      <div class="boss-title">
+        <span>Titan Black Caiman (Apex Boss)</span>
+        <span id="boss-hp-text">450 / 450</span>
+      </div>
+      <div class="boss-bar-track">
+        <div id="boss-health-fill"></div>
+      </div>
+    </div>
+
+    <!-- Bottom Notification Toast Stream -->
+    <div id="notification-panel"></div>
+
+    <!-- Tactical Radar HUD (Bottom Right) -->
+    <div class="radar-panel interactive">
+      <canvas id="radar-canvas"></canvas>
+      <div class="radar-border-ring"></div>
+      <div class="radar-label">BIO-RADAR</div>
+    </div>
+
+    <!-- Mobile Virtual Controls -->
+    <div id="mobile-controls">
+      <div id="joystick-base" class="joystick-base">
+        <div id="joystick-thumb" class="joystick-thumb"></div>
+      </div>
+      <div class="mobile-actions">
+        <button id="btn-mobile-strike" class="mobile-btn">STRIKE</button>
+        <button id="btn-mobile-thermal" class="mobile-btn">HEAT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Start Game & Tutorial Modal -->
+  <div id="start-modal" class="modal-overlay">
+    <div class="modal-card">
+      <h1 class="modal-title">ANACONDA</h1>
+      <p class="modal-subtitle">Amazon River Apex Predator &bull; 3D Survival Simulator</p>
+
+      <div class="guide-grid">
+        <div class="guide-item"><kbd>W</kbd> <kbd>S</kbd> / <kbd>&uarr;</kbd> <kbd>&darr;</kbd> Slither / Swim Forward & Backward</div>
+        <div class="guide-item"><kbd>A</kbd> <kbd>D</kbd> / <kbd>&larr;</kbd> <kbd>&rarr;</kbd> Steer Heading Left & Right</div>
+        <div class="guide-item"><kbd>SPACE</kbd> / <kbd>L-Click</kbd> Strike & Constrict Prey</div>
+        <div class="guide-item"><kbd>SHIFT</kbd> Sprint Undulation (Uses Stamina)</div>
+        <div class="guide-item"><kbd>T</kbd> Thermal Pit Vision (Detect Warm Prey)</div>
+        <div class="guide-item"><kbd>C</kbd> Switch Camera (Chase, Top-Down, 1st-Person)</div>
+      </div>
+
+      <button id="start-btn" class="btn-start">ENTER THE AMAZON</button>
+    </div>
+  </div>
+
+  <!-- Engine Scripts -->
+  <script src="libs/three.min.js"></script>
+  <script src="src/audio.js"></script>
+  <script src="src/radar.js"></script>
+  <script src="src/snake.js"></script>
+  <script src="src/world.js"></script>
+  <script src="src/entities.js"></script>
+  <script src="src/game.js"></script>
+</body>
+</html>
