@@ -1,4 +1,4 @@
-// Core 3D Game Engine Loop with Cinematic Constriction Camera, Growth Evolution, and Level Progression
+// Core 3D Game Engine Loop with Photorealistic Assets, Cinematic Constriction Camera, and Level Progression
 class AnacondaGame {
   constructor() {
     this.container = document.getElementById('game-container');
@@ -7,11 +7,10 @@ class AnacondaGame {
     this.isPaused = false;
     this.isGameOver = false;
     this.isThermalActive = false;
-    this.cameraMode = 0; // 0: Chase, 1: Isometric, 2: 1st-Person
+    this.cameraMode = 0;
     this.currentLevel = 1;
     this.cinematicCamAngle = 0;
 
-    // Input state
     this.input = {
       forward: false,
       backward: false,
@@ -20,12 +19,34 @@ class AnacondaGame {
       boost: false
     };
 
-    // Subsystems
+    // 1. Initialize Renderer & Scene
     this.initThree();
+
+    // 2. Preload Photorealistic Production Texture Pipeline
+    this.assets = new GameAssets();
+    this.assets.loadAll(
+      (progress) => {
+        const startBtn = document.getElementById('start-btn');
+        if (startBtn) startBtn.textContent = `LOADING HD ASSETS (${Math.round(progress * 100)}%)...`;
+      },
+      () => {
+        this.onAssetsReady();
+      }
+    );
+  }
+
+  onAssetsReady() {
+    const startBtn = document.getElementById('start-btn');
+    if (startBtn) {
+      startBtn.textContent = "ENTER THE AMAZON";
+      startBtn.disabled = false;
+    }
+
+    // Subsystems initialized with photographic PBR assets
     this.audio = new AudioManager();
-    this.world = new AmazonWorld(this.scene);
-    this.snake = new AnacondaSnake(this.scene);
-    this.fauna = new FaunaManager(this.scene, this.world);
+    this.world = new AmazonWorld(this.scene, this.assets);
+    this.snake = new AnacondaSnake(this.scene, this.assets);
+    this.fauna = new FaunaManager(this.scene, this.world, this.assets);
     this.radar = new RadarHUD('radar-canvas');
 
     this.initInputs();
@@ -38,7 +59,7 @@ class AnacondaGame {
 
   initThree() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x0c2115);
+    this.scene.background = new THREE.Color(0x0a1c12);
 
     this.camera = new THREE.PerspectiveCamera(
       55,
@@ -58,12 +79,12 @@ class AnacondaGame {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.15;
+    this.renderer.toneMappingExposure = 1.18;
   }
 
   initInputs() {
     window.addEventListener('keydown', (e) => {
-      if (this.isGameOver) return;
+      if (this.isGameOver || !this.snake) return;
       switch (e.code) {
         case 'KeyW':
         case 'ArrowUp':
@@ -139,9 +160,8 @@ class AnacondaGame {
       }
     });
 
-    // Mouse Steering
     window.addEventListener('mousemove', (e) => {
-      if (this.isPaused || this.isGameOver || this.snake.isConstricting) return;
+      if (this.isPaused || this.isGameOver || !this.snake || this.snake.isConstricting) return;
       const midX = window.innerWidth / 2;
       const diffX = (e.clientX - midX) / midX;
       if (Math.abs(diffX) > 0.15) {
@@ -154,7 +174,7 @@ class AnacondaGame {
     });
 
     window.addEventListener('mousedown', (e) => {
-      if (e.button === 0 && !this.isGameOver) {
+      if (e.button === 0 && !this.isGameOver && this.snake) {
         this.snake.triggerStrike();
         this.audio.playStrike();
       }
@@ -218,8 +238,10 @@ class AnacondaGame {
     if (btnStrike) {
       btnStrike.addEventListener('touchstart', (e) => {
         e.preventDefault();
-        this.snake.triggerStrike();
-        this.audio.playStrike();
+        if (this.snake) {
+          this.snake.triggerStrike();
+          this.audio.playStrike();
+        }
       });
     }
 
@@ -262,11 +284,11 @@ class AnacondaGame {
   }
 
   switchLevel(lvl) {
+    if (!this.world || !this.fauna || !this.snake) return;
     this.currentLevel = lvl;
     this.world.loadLevel(lvl);
     this.fauna.spawnForLevel(lvl);
 
-    // Reposition Snake at level entrance
     this.snake.position.set(0, 0.4, 0);
     this.snake.heading = 0;
     this.snake.preyEatenInCurrentLevel = 0;
@@ -349,6 +371,7 @@ class AnacondaGame {
   }
 
   updateHUD() {
+    if (!this.snake) return;
     const healthFill = document.getElementById('health-fill');
     if (healthFill) healthFill.style.width = `${Math.max(0, this.snake.health)}%`;
 
@@ -374,10 +397,9 @@ class AnacondaGame {
     const preyCountVal = document.getElementById('prey-count-val');
     if (preyCountVal) preyCountVal.textContent = `${this.snake.preyEaten} (Goal: 5 to evolve)`;
 
-    // Boss Bar
     const bossPanel = document.getElementById('boss-bar-panel');
     const bossFill = document.getElementById('boss-health-fill');
-    if (this.fauna.boss && this.fauna.boss.isAlive) {
+    if (this.fauna && this.fauna.boss && this.fauna.boss.isAlive) {
       const distToBoss = this.snake.getHeadPosition().distanceTo(this.fauna.boss.getPosition());
       if (distToBoss < 50) {
         bossPanel.style.display = 'block';
@@ -390,16 +412,15 @@ class AnacondaGame {
       if (bossPanel) bossPanel.style.display = 'none';
     }
 
-    // Crosshair state
     const crosshair = document.getElementById('crosshair');
     if (crosshair) crosshair.classList.toggle('strike-ready', this.snake.stamina > 20);
   }
 
   updateCamera(delta) {
+    if (!this.snake) return;
     const headPos = this.snake.getHeadPosition();
     const heading = this.snake.getHeadingAngle();
 
-    // 1. Cinematic 3D Eating / Constriction Camera Orbit
     if (this.snake.isConstricting) {
       this.cinematicCamAngle += delta * 1.8;
       const zoomDist = Math.max(3.5, this.snake.baseRadius * 6.5);
@@ -413,11 +434,9 @@ class AnacondaGame {
       return;
     }
 
-    // 2. Standard Gameplay Camera Modes
     const scaleFactor = Math.max(1.0, this.snake.baseRadius / 0.35);
 
     if (this.cameraMode === 0) {
-      // 3rd-Person Chase Cam
       const camOffset = new THREE.Vector3(
         Math.sin(heading) * (8 * scaleFactor),
         4.5 * scaleFactor,
@@ -427,13 +446,11 @@ class AnacondaGame {
       this.camera.position.lerp(targetCamPos, 5.5 * delta);
       this.camera.lookAt(headPos.x, headPos.y + 0.6 * scaleFactor, headPos.z);
     } else if (this.cameraMode === 1) {
-      // Tactical Isometric Cam
       const dist = 22 * scaleFactor;
       const targetCamPos = new THREE.Vector3(headPos.x + dist, headPos.y + dist * 1.2, headPos.z + dist);
       this.camera.position.lerp(targetCamPos, 4 * delta);
       this.camera.lookAt(headPos);
     } else if (this.cameraMode === 2) {
-      // 1st-Person Predator Cam
       const eyeOffset = new THREE.Vector3(
         -Math.sin(heading) * (0.35 * scaleFactor),
         0.35 * scaleFactor,
@@ -453,19 +470,18 @@ class AnacondaGame {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.radar.resize();
+    if (this.radar) this.radar.resize();
   }
 
   animate() {
     requestAnimationFrame(() => this.animate());
     const delta = Math.min(this.clock.getDelta(), 0.1);
 
-    if (this.isPaused || this.isGameOver) {
+    if (!this.snake || this.isPaused || this.isGameOver) {
       this.renderer.render(this.scene, this.camera);
       return;
     }
 
-    // Check Gateway Collision in Level 1 (to transition to Level 2)
     if (this.currentLevel === 1 && this.snake.preyEaten >= 5) {
       const headPos = this.snake.getHeadPosition();
       if (headPos.z > 24 && Math.abs(headPos.x) < 7) {
@@ -473,7 +489,6 @@ class AnacondaGame {
       }
     }
 
-    // Update Subsystems
     this.snake.update(delta, this.input, this.world);
     this.world.update(delta);
     this.fauna.update(
@@ -491,7 +506,6 @@ class AnacondaGame {
       }
     );
 
-    // Audio locomotion
     if (Math.abs(this.snake.speed) > 1.0) {
       if (this.snake.isUnderwater) {
         if (Math.random() < 0.08) this.audio.playSwim();
@@ -500,7 +514,6 @@ class AnacondaGame {
       }
     }
 
-    // Player Death Check
     if (this.snake.health <= 0 && !this.isGameOver) {
       this.isGameOver = true;
       this.audio.playHurt();

@@ -1,8 +1,9 @@
-// Realistic Amazon Rainforest Fauna & Insects Ecosystem with Level-Specific Spawning
+// Photorealistic Amazon Fauna & Insects Ecosystem with Photographic PBR Textures
 class FaunaManager {
-  constructor(scene, world) {
+  constructor(scene, world, gameAssets) {
     this.scene = scene;
     this.world = world;
+    this.assets = gameAssets;
     this.entities = [];
     this.boss = null;
     this.currentLevel = 1;
@@ -25,40 +26,38 @@ class FaunaManager {
     this.currentLevel = levelNumber;
 
     if (levelNumber === 1) {
-      // Level 1: "The Shallows - Nursery Island" (Targeted for Juvenile Anaconda)
-      // High density of insects and small tree frogs within 26m radius
+      // Level 1: "The Shallows - Nursery Island" (Juvenile Anaconda Ecosystem)
       for (let i = 0; i < 12; i++) {
-        this.entities.push(new DragonflyEntity(this.scene, this.world));
+        this.entities.push(new DragonflyEntity(this.scene, this.world, this.assets));
       }
       for (let i = 0; i < 8; i++) {
-        this.entities.push(new BeetleEntity(this.scene, this.world));
+        this.entities.push(new BeetleEntity(this.scene, this.world, this.assets));
       }
       for (let i = 0; i < 10; i++) {
-        this.entities.push(new FrogEntity(this.scene, this.world, 0.45)); // Small juvenile frogs
+        this.entities.push(new FrogEntity(this.scene, this.world, this.assets, 0.45));
       }
     } else if (levelNumber === 2) {
-      // Level 2: "The Great Tapajós Crossing" (Expansive Basin for Sub-Adult & Adult)
-      // Capybaras, River Frogs, Forest Rats, and Caimans
+      // Level 2: "The Great Tapajós Crossing" (Sub-Adult & Adult Apex Predators)
       for (let i = 0; i < 8; i++) {
-        this.entities.push(new CapybaraEntity(this.scene, this.world));
+        this.entities.push(new CapybaraEntity(this.scene, this.world, this.assets));
       }
       for (let i = 0; i < 6; i++) {
-        this.entities.push(new CaimanEntity(this.scene, this.world));
+        this.entities.push(new CaimanEntity(this.scene, this.world, this.assets));
       }
       for (let i = 0; i < 12; i++) {
-        this.entities.push(new FrogEntity(this.scene, this.world, 0.85));
+        this.entities.push(new FrogEntity(this.scene, this.world, this.assets, 0.85));
       }
       for (let i = 0; i < 10; i++) {
-        this.entities.push(new RatEntity(this.scene, this.world));
+        this.entities.push(new RatEntity(this.scene, this.world, this.assets));
       }
     } else {
       // Level 3: "Flooded Blackwater Forest" (Titan Black Caiman Boss Arena)
-      this.boss = new BlackCaimanBoss(this.scene, this.world);
+      this.boss = new BlackCaimanBoss(this.scene, this.world, this.assets);
       for (let i = 0; i < 6; i++) {
-        this.entities.push(new CapybaraEntity(this.scene, this.world));
+        this.entities.push(new CapybaraEntity(this.scene, this.world, this.assets));
       }
       for (let i = 0; i < 4; i++) {
-        this.entities.push(new CaimanEntity(this.scene, this.world));
+        this.entities.push(new CaimanEntity(this.scene, this.world, this.assets));
       }
     }
   }
@@ -85,7 +84,6 @@ class FaunaManager {
       const catchRadius = (isStriking ? 3.2 : 1.6) + ent.radius;
 
       if (dist < catchRadius) {
-        // Trigger 3D Constriction & Eating Sequence!
         ent.die();
         snake.startCinematicConstriction(ent);
         const evolved = snake.swallowPrey(ent.sizeMultiplier, ent.nutrition);
@@ -108,9 +106,10 @@ class FaunaManager {
 
 // ----------------- Base Fauna Entity -----------------
 class BaseEntity {
-  constructor(scene, world, type) {
+  constructor(scene, world, assets, type) {
     this.scene = scene;
     this.world = world;
+    this.assets = assets;
     this.type = type;
     this.isAlive = true;
     this.position = new THREE.Vector3();
@@ -175,7 +174,6 @@ class BaseEntity {
     this.position.x += Math.sin(this.heading) * currentSpeed * delta;
     this.position.z += Math.cos(this.heading) * currentSpeed * delta;
 
-    // Bounds check
     const maxBound = (this.world.currentLevel === 1) ? 26 : (this.world.worldSize * 0.45);
     this.position.x = Math.max(-maxBound, Math.min(maxBound, this.position.x));
     this.position.z = Math.max(-maxBound, Math.min(maxBound, this.position.z));
@@ -192,8 +190,8 @@ class BaseEntity {
 
 // ----------------- 3D Amazon Emerald Dragonfly (Insect) -----------------
 class DragonflyEntity extends BaseEntity {
-  constructor(scene, world) {
-    super(scene, world, 'insect');
+  constructor(scene, world, assets) {
+    super(scene, world, assets, 'insect');
     this.speed = 3.8;
     this.fleeSpeed = 8.5;
     this.radius = 0.28;
@@ -207,33 +205,32 @@ class DragonflyEntity extends BaseEntity {
 
   initMesh() {
     this.mesh = new THREE.Group();
-    // Metallic iridescent emerald thorax & abdomen
-    const bodyMat = new THREE.MeshStandardMaterial({
+    const bodyMat = new THREE.MeshPhysicalMaterial({
       color: 0x00e676,
-      metalness: 0.85,
-      roughness: 0.2
+      metalness: 0.9,
+      roughness: 0.15,
+      clearcoat: 0.8
     });
-    const wingMat = new THREE.MeshStandardMaterial({
-      color: 0xccffff,
+    const wingMat = new THREE.MeshPhysicalMaterial({
+      color: 0xe0ffff,
       transparent: true,
       opacity: 0.65,
-      roughness: 0.1,
-      metalness: 0.5,
+      roughness: 0.08,
+      metalness: 0.4,
+      transmission: 0.85,
       side: THREE.DoubleSide
     });
 
-    // Slender segmented abdomen
-    const abdomen = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.02, 0.7, 6), bodyMat);
+    const abdomen = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.02, 0.7, 8), bodyMat);
     abdomen.rotation.x = Math.PI * 0.5;
     abdomen.position.set(0, 0, 0.25);
     this.mesh.add(abdomen);
 
-    // Thorax & Head
-    const thorax = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), bodyMat);
+    const thorax = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), bodyMat);
     thorax.position.set(0, 0, -0.15);
     this.mesh.add(thorax);
 
-    const eyeMat = new THREE.MeshStandardMaterial({ color: 0x221144, roughness: 0.1 });
+    const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1a0933, roughness: 0.1 });
     const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 6), eyeMat);
     eyeL.position.set(0.055, 0.03, -0.2);
     this.mesh.add(eyeL);
@@ -241,7 +238,6 @@ class DragonflyEntity extends BaseEntity {
     eyeR.position.set(-0.055, 0.03, -0.2);
     this.mesh.add(eyeR);
 
-    // 4 Translucent Fluttering Wings
     this.wings = [];
     for (let w = 0; w < 4; w++) {
       const wingGeom = new THREE.PlaneGeometry(0.42, 0.12);
@@ -258,15 +254,11 @@ class DragonflyEntity extends BaseEntity {
 
   update(delta, snakePos) {
     super.updateMovement(delta, snakePos, 10);
-
-    // High-frequency wing beat fluttering
     this.wingBeat += delta * 65;
     for (let i = 0; i < this.wings.length; i++) {
       const isRight = (i % 2 === 0);
       this.wings[i].rotation.z = Math.sin(this.wingBeat) * 0.45 * (isRight ? 1 : -1);
     }
-
-    // Hover above water/mud surface
     const groundY = this.world.getHeightAt(this.position.x, this.position.z);
     this.position.y = Math.max(groundY, this.world.waterLevel) + this.flightHoverOffset + Math.sin(Date.now() * 0.006) * 0.2;
     if (this.mesh) this.mesh.position.y = this.position.y;
@@ -275,8 +267,8 @@ class DragonflyEntity extends BaseEntity {
 
 // ----------------- 3D Amazon Jewel Beetle (Insect) -----------------
 class BeetleEntity extends BaseEntity {
-  constructor(scene, world) {
-    super(scene, world, 'insect');
+  constructor(scene, world, assets) {
+    super(scene, world, assets, 'insect');
     this.speed = 1.6;
     this.fleeSpeed = 4.0;
     this.radius = 0.25;
@@ -288,14 +280,14 @@ class BeetleEntity extends BaseEntity {
 
   initMesh() {
     this.mesh = new THREE.Group();
-    // Shiny gold-green carapace
-    const shellMat = new THREE.MeshStandardMaterial({
-      color: 0x88cc11,
-      metalness: 0.9,
-      roughness: 0.15
+    const shellMat = new THREE.MeshPhysicalMaterial({
+      color: 0x99dd11,
+      metalness: 0.95,
+      roughness: 0.12,
+      clearcoat: 0.95
     });
 
-    const shell = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), shellMat);
+    const shell = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 10), shellMat);
     shell.scale.set(0.85, 0.5, 1.25);
     shell.position.y = 0.1;
     this.mesh.add(shell);
@@ -308,10 +300,10 @@ class BeetleEntity extends BaseEntity {
   }
 }
 
-// ----------------- Realistic Amazon Tree Frog -----------------
+// ----------------- Photorealistic Amazon Tree Frog -----------------
 class FrogEntity extends BaseEntity {
-  constructor(scene, world, scale = 0.65) {
-    super(scene, world, 'frog');
+  constructor(scene, world, assets, scale = 0.65) {
+    super(scene, world, assets, 'frog');
     this.scale = scale;
     this.speed = 2.0;
     this.fleeSpeed = 6.0;
@@ -325,33 +317,43 @@ class FrogEntity extends BaseEntity {
 
   initMesh() {
     this.mesh = new THREE.Group();
-    const skinMat = new THREE.MeshStandardMaterial({
-      color: 0x3cb024,
-      roughness: 0.25, // Glossy wet amphibian sheen
-      metalness: 0.12
-    });
-    const bellyMat = new THREE.MeshStandardMaterial({ color: 0xccdc66, roughness: 0.4 });
-    const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, roughness: 0.1 });
+    const frogTex = (this.assets && this.assets.textures.frog) ? this.assets.textures.frog : null;
 
-    // Torso
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.35 * this.scale, 10, 10), skinMat);
-    body.scale.set(0.95, 0.62, 1.3);
+    // Ultra-Glossy Wet Amphibian Clearcoat Material
+    const skinMat = new THREE.MeshPhysicalMaterial({
+      map: frogTex,
+      color: frogTex ? 0xffffff : 0x44cc28,
+      roughness: 0.15,
+      clearcoat: 1.0, // High-sheen liquid reflection
+      clearcoatRoughness: 0.05,
+      reflectivity: 0.9
+    });
+    const eyeMat = new THREE.MeshPhysicalMaterial({
+      color: 0xffaa00,
+      roughness: 0.05,
+      clearcoat: 1.0
+    });
+
+    // Sculpted organic torso
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.38 * this.scale, 16, 16), skinMat);
+    body.scale.set(0.95, 0.6, 1.35);
     body.position.y = 0.22 * this.scale;
+    body.castShadow = true;
     this.mesh.add(body);
 
     // Bulging Eyes
-    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.11 * this.scale, 8, 8), eyeMat);
-    eyeL.position.set(0.22 * this.scale, 0.38 * this.scale, -0.22 * this.scale);
+    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.12 * this.scale, 12, 12), eyeMat);
+    eyeL.position.set(0.24 * this.scale, 0.4 * this.scale, -0.25 * this.scale);
     this.mesh.add(eyeL);
 
-    const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.11 * this.scale, 8, 8), eyeMat);
-    eyeR.position.set(-0.22 * this.scale, 0.38 * this.scale, -0.22 * this.scale);
+    const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.12 * this.scale, 12, 12), eyeMat);
+    eyeR.position.set(-0.24 * this.scale, 0.4 * this.scale, -0.25 * this.scale);
     this.mesh.add(eyeR);
 
-    // Articulated Hind Legs
+    // Curved Hind Legs
     for (let side of [-1, 1]) {
-      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.12 * this.scale, 0.14 * this.scale, 0.45 * this.scale), skinMat);
-      leg.position.set(side * 0.32 * this.scale, 0.15 * this.scale, 0.28 * this.scale);
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.12 * this.scale, 0.15 * this.scale, 0.48 * this.scale), skinMat);
+      leg.position.set(side * 0.34 * this.scale, 0.15 * this.scale, 0.28 * this.scale);
       leg.rotation.y = side * 0.45;
       this.mesh.add(leg);
     }
@@ -369,10 +371,10 @@ class FrogEntity extends BaseEntity {
   }
 }
 
-// ----------------- Forest Spiny Rat -----------------
+// ----------------- Photorealistic Forest Spiny Rat -----------------
 class RatEntity extends BaseEntity {
-  constructor(scene, world) {
-    super(scene, world, 'rat');
+  constructor(scene, world, assets) {
+    super(scene, world, assets, 'rat');
     this.speed = 2.8;
     this.fleeSpeed = 6.8;
     this.radius = 0.55;
@@ -384,14 +386,22 @@ class RatEntity extends BaseEntity {
 
   initMesh() {
     this.mesh = new THREE.Group();
-    const furMat = new THREE.MeshStandardMaterial({ color: 0x4a3622, roughness: 0.85 });
+    const ratTex = (this.assets && this.assets.textures.rat) ? this.assets.textures.rat : null;
 
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.42, 8, 8), furMat);
-    body.scale.set(0.7, 0.6, 1.45);
-    body.position.y = 0.25;
+    const furMat = new THREE.MeshPhysicalMaterial({
+      map: ratTex,
+      color: ratTex ? 0xffffff : 0x5a422e,
+      roughness: 0.85,
+      clearcoat: 0.15
+    });
+
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.44, 14, 14), furMat);
+    body.scale.set(0.72, 0.62, 1.48);
+    body.position.y = 0.26;
+    body.castShadow = true;
     this.mesh.add(body);
 
-    const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.015, 0.9, 5), furMat);
+    const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.015, 0.95, 6), furMat);
     tail.rotation.x = Math.PI * 0.4;
     tail.position.set(0, 0.2, 0.9);
     this.mesh.add(tail);
@@ -404,10 +414,10 @@ class RatEntity extends BaseEntity {
   }
 }
 
-// ----------------- Realistic Capybara -----------------
+// ----------------- Photorealistic Capybara -----------------
 class CapybaraEntity extends BaseEntity {
-  constructor(scene, world) {
-    super(scene, world, 'capybara');
+  constructor(scene, world, assets) {
+    super(scene, world, assets, 'capybara');
     this.speed = 2.2;
     this.fleeSpeed = 5.6;
     this.radius = 1.25;
@@ -419,17 +429,24 @@ class CapybaraEntity extends BaseEntity {
 
   initMesh() {
     this.mesh = new THREE.Group();
-    const coatMat = new THREE.MeshStandardMaterial({ color: 0x6e4321, roughness: 0.9 });
-    const snoutMat = new THREE.MeshStandardMaterial({ color: 0x3d2411, roughness: 0.95 });
+    const capyTex = (this.assets && this.assets.textures.capybara) ? this.assets.textures.capybara : null;
 
-    // Robust Barrel Torso
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.2, 2.2), coatMat);
-    body.position.y = 0.7;
+    const peltMat = new THREE.MeshPhysicalMaterial({
+      map: capyTex,
+      color: capyTex ? 0xffffff : 0x6e4321,
+      roughness: 0.88,
+      clearcoat: 0.2
+    });
+
+    // Sculpted organic curved mammalian body
+    const body = new THREE.Mesh(new THREE.SphereGeometry(1.15, 18, 16), peltMat);
+    body.scale.set(0.85, 0.85, 1.55);
+    body.position.y = 0.72;
     body.castShadow = true;
     this.mesh.add(body);
 
-    // Iconic Blunt Snout Head
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.78, 1.05), snoutMat);
+    // Characteristic blunt square snout
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.78, 1.05, 4, 4, 4), peltMat);
     head.position.set(0, 1.0, -1.35);
     head.castShadow = true;
     this.mesh.add(head);
@@ -437,7 +454,7 @@ class CapybaraEntity extends BaseEntity {
     // Sturdy swimming legs
     for (let lx of [-0.48, 0.48]) {
       for (let lz of [-0.75, 0.75]) {
-        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.7, 6), coatMat);
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.7, 8), peltMat);
         leg.position.set(lx, 0.25, lz);
         this.mesh.add(leg);
       }
@@ -451,10 +468,10 @@ class CapybaraEntity extends BaseEntity {
   }
 }
 
-// ----------------- Realistic Spectacled Caiman -----------------
+// ----------------- Photorealistic Spectacled Caiman -----------------
 class CaimanEntity extends BaseEntity {
-  constructor(scene, world) {
-    super(scene, world, 'caiman');
+  constructor(scene, world, assets) {
+    super(scene, world, assets, 'caiman');
     this.speed = 3.0;
     this.fleeSpeed = 6.4;
     this.radius = 1.4;
@@ -466,17 +483,27 @@ class CaimanEntity extends BaseEntity {
 
   initMesh() {
     this.mesh = new THREE.Group();
-    const hideMat = new THREE.MeshStandardMaterial({ color: 0x354026, roughness: 0.75, metalness: 0.15 });
+    const caimanTex = (this.assets && this.assets.textures.caiman) ? this.assets.textures.caiman : null;
 
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.52, 2.6), hideMat);
+    const hideMat = new THREE.MeshPhysicalMaterial({
+      map: caimanTex,
+      color: caimanTex ? 0xffffff : 0x354026,
+      roughness: 0.55,
+      metalness: 0.15,
+      clearcoat: 0.45 // Wet armor scales
+    });
+
+    // Sculpted organic caiman body
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.52, 2.6, 6, 4, 8), hideMat);
     body.position.y = 0.26;
+    body.castShadow = true;
     this.mesh.add(body);
 
-    const snout = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.35, 1.6), hideMat);
+    const snout = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.35, 1.6, 4, 3, 6), hideMat);
     snout.position.set(0, 0.2, -1.8);
     this.mesh.add(snout);
 
-    const tail = new THREE.Mesh(new THREE.ConeGeometry(0.48, 2.5, 6), hideMat);
+    const tail = new THREE.Mesh(new THREE.ConeGeometry(0.48, 2.5, 8), hideMat);
     tail.rotation.x = Math.PI * 0.5;
     tail.position.set(0, 0.26, 2.3);
     this.mesh.add(tail);
@@ -491,9 +518,10 @@ class CaimanEntity extends BaseEntity {
 
 // ----------------- Prehistoric Titan Black Caiman Boss -----------------
 class BlackCaimanBoss {
-  constructor(scene, world) {
+  constructor(scene, world, assets) {
     this.scene = scene;
     this.world = world;
+    this.assets = assets;
     this.isAlive = true;
     this.maxHealth = 500;
     this.health = 500;
@@ -512,29 +540,43 @@ class BlackCaimanBoss {
 
   initMesh() {
     this.mesh = new THREE.Group();
-    const blackMat = new THREE.MeshStandardMaterial({ color: 0x141613, roughness: 0.88, metalness: 0.25 });
-    const amberEye = new THREE.MeshStandardMaterial({ color: 0xff2200, emissive: 0x660000, roughness: 0.1 });
+    const bossTex = (this.assets && this.assets.textures.caimanBoss) ? this.assets.textures.caimanBoss : null;
 
-    const body = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.35, 6.0), blackMat);
+    const blackMat = new THREE.MeshPhysicalMaterial({
+      map: bossTex,
+      color: bossTex ? 0xffffff : 0x141613,
+      roughness: 0.65,
+      metalness: 0.2,
+      clearcoat: 0.55
+    });
+    const amberEye = new THREE.MeshPhysicalMaterial({
+      color: 0xff2200,
+      emissive: 0x880000,
+      roughness: 0.05,
+      clearcoat: 1.0
+    });
+
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.35, 6.0, 6, 4, 10), blackMat);
     body.position.y = 0.65;
+    body.castShadow = true;
     this.mesh.add(body);
 
-    // Dorsal armor scutes
     for (let r = -2; r <= 2; r++) {
-      const ridge = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.85, 4), blackMat);
+      const ridge = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.85, 6), blackMat);
       ridge.position.set(0, 1.5, r * 1.1);
       this.mesh.add(ridge);
     }
 
-    const head = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.95, 3.4), blackMat);
+    const head = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.95, 3.4, 6, 4, 6), blackMat);
     head.position.set(0, 0.75, -4.2);
+    head.castShadow = true;
     this.mesh.add(head);
 
-    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.26, 8, 8), amberEye);
+    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.26, 10, 10), amberEye);
     eyeL.position.set(1.0, 1.25, -3.6);
     this.mesh.add(eyeL);
 
-    const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.26, 8, 8), amberEye);
+    const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.26, 10, 10), amberEye);
     eyeR.position.set(-1.0, 1.25, -3.6);
     this.mesh.add(eyeR);
 

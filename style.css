@@ -259,6 +259,21 @@ html, body {
 #radar-canvas {
   width: 100%;
   height: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+.radar-photo-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.35;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .radar-border-ring {
