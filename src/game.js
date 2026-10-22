@@ -384,11 +384,10 @@ class AnacondaGame {
     const scoreVal = document.getElementById('score-val');
     if (scoreVal) scoreVal.textContent = this.snake.score;
 
-    const lengthVal = document.getElementById('length-val');
-    if (lengthVal) {
-      const lengthMeters = (this.snake.numSegments * this.snake.segmentDistance).toFixed(1);
+      const count = this.snake.numSpinePoints || this.snake.numSegments || 28;
+      const dist = this.snake.spineDistance || this.snake.segmentDistance || 0.5;
+      const lengthMeters = (count * dist).toFixed(1);
       lengthVal.textContent = `${lengthMeters}m`;
-    }
 
     const stageNames = ["Juvenile", "Sub-Adult", "Adult Predator", "Apex Titan"];
     const apexVal = document.getElementById('apex-val');

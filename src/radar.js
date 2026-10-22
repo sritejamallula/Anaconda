@@ -171,13 +171,14 @@ class RadarHUD {
     }
 
     // Draw Anaconda Body segments on Radar
-    const segments = snake.segments;
-    if (segments && segments.length > 0) {
+    const pts = snake.spinePoints || snake.segments;
+    if (pts && pts.length > 0) {
       ctx.strokeStyle = 'rgba(85, 255, 153, 0.65)';
       ctx.lineWidth = 2.5;
       ctx.beginPath();
-      for (let i = 0; i < segments.length; i += 2) {
-        const segP = toRadar(segments[i].position.x, segments[i].position.z);
+      for (let i = 0; i < pts.length; i += 2) {
+        const p = pts[i].position || pts[i];
+        const segP = toRadar(p.x, p.z);
         if (i === 0) ctx.moveTo(segP.x, segP.y);
         else ctx.lineTo(segP.x, segP.y);
       }
