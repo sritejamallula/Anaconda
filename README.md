@@ -89,7 +89,16 @@
 
 ---
 
-### Method 1: Running in VS Code (Recommended)
+### Method 1: Instant Launch with Standalone Executable JAR (Easiest)
+Simply double-click **`Anaconda.jar`** or run from your terminal:
+```bash
+java -jar Anaconda.jar
+```
+*Zero compilation required — the standalone JAR includes the complete game, procedural audio, and asset bundle!*
+
+---
+
+### Method 2: Running in VS Code (Development Mode)
 1. Open Visual Studio Code.
 2. Select **File > Open Folder...** and choose this project folder (`anaconda-amazon-survival`).
 3. Open `src/main/java/Main.java`.
@@ -98,7 +107,7 @@
 
 ---
 
-### Method 2: Running via One-Click Scripts (Windows)
+### Method 3: Running via One-Click Scripts (Windows)
 - **Command Prompt (CMD)**:
   Double-click `compile_and_run.bat` or run:
   ```cmd
@@ -111,7 +120,7 @@
 
 ---
 
-### Method 3: Compiling from Command Line (Any OS)
+### Method 4: Compiling from Command Line (Any OS)
 
 #### Compile:
 ```bash

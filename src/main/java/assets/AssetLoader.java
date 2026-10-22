@@ -58,6 +58,25 @@ public class AssetLoader {
                 }
             }
         }
+
+        // Also attempt loading from JAR classpath resources
+        String[] classpathAssets = {
+                "anaconda_model", "black_caiman_boss", "constriction_cinematic",
+                "flooded_forest", "marajo_island", "prey_fauna", "swallowing_bulge",
+                "tactical_hud", "tapajos_basin", "thermal_pit_vision"
+        };
+        for (String assetName : classpathAssets) {
+            if (!imageCache.containsKey(assetName)) {
+                try {
+                    java.io.InputStream is = getClass().getResourceAsStream("/assets/art/" + assetName + ".jpg");
+                    if (is == null) is = getClass().getResourceAsStream("/" + assetName + ".jpg");
+                    if (is != null) {
+                        BufferedImage img = ImageIO.read(is);
+                        if (img != null) imageCache.put(assetName, img);
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
     }
 
     /**
