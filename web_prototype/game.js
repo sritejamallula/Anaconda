@@ -1,4 +1,4 @@
-// Core 3D Game Engine Loop with Photorealistic Assets, Cinematic Constriction Camera, and Level Progression
+// Core 3D Game Engine Loop with Photorealistic Assets, 360° Mouse Orbit, Cinematic Constriction, and Level Progression
 class AnacondaGame {
   constructor() {
     this.container = document.getElementById('game-container');
@@ -7,9 +7,17 @@ class AnacondaGame {
     this.isPaused = false;
     this.isGameOver = false;
     this.isThermalActive = false;
-    this.cameraMode = 0;
+    this.cameraMode = 0; // 0 = 360° Orbit Follow, 1 = Wide Isometric, 2 = First-Person Head Cam
     this.currentLevel = 1;
     this.cinematicCamAngle = 0;
+
+    // 360° Interactive Orbit & Zoom Controls
+    this.orbitYaw = 0;
+    this.orbitPitch = 0.36;
+    this.orbitDist = 10.5;
+    this.isDragging = false;
+    this.dragStart = { x: 0, y: 0 };
+    this.hasUserStarted = false;
 
     this.input = {
       forward: false,
@@ -19,32 +27,13 @@ class AnacondaGame {
       boost: false
     };
 
-    // 1. Initialize Renderer & Scene
+    // 1. Initialize Renderer & 3D Scene
     this.initThree();
 
-    // 2. Preload Photorealistic Production Texture Pipeline
+    // 2. Preload Photorealistic Asset Pipeline with Instant Fallbacks
     this.assets = new GameAssets();
-    this.assets.loadAll(
-      (progress) => {
-        const startBtn = document.getElementById('start-btn');
-        if (startBtn) startBtn.textContent = `LOADING HD ASSETS (${Math.round(progress * 100)}%)...`;
-      },
-      () => {
-        this.onAssetsReady();
-      }
-    );
-  }
-
-  onAssetsReady() {
-    const startBtn = document.getElementById('start-btn');
-    if (startBtn) {
-      startBtn.textContent = "ENTER THE AMAZON";
-      startBtn.disabled = false;
-    }
-
-    // Subsystems initialized with photographic PBR assets
     this.audio = new AudioManager();
-    this.world = new AmazonWorld(this.scene, this.assets);
+    this.world = new AmazonWorld(this.scene, this.assets, this.renderer);
     this.snake = new AnacondaSnake(this.scene, this.assets);
     this.fauna = new FaunaManager(this.scene, this.world, this.assets);
     this.radar = new RadarHUD('radar-canvas');
@@ -54,20 +43,38 @@ class AnacondaGame {
     this.initMobileControls();
 
     window.addEventListener('resize', () => this.onResize());
+
+    // 3. Start 3D Rendering Loop IMMEDIATELY (Zero black screen wait)
     this.animate();
+
+    // 4. Background HD Asset Ingestion
+    this.assets.loadAll(
+      (progress) => {
+        const startBtn = document.getElementById('start-btn');
+        if (startBtn && !this.hasUserStarted) {
+          startBtn.textContent = ENTER THE AMAZON (3D %);
+        }
+      },
+      () => {
+        const startBtn = document.getElementById('start-btn');
+        if (startBtn && !this.hasUserStarted) {
+          startBtn.textContent = 'ENTER THE AMAZON (3D)';
+        }
+      }
+    );
   }
 
   initThree() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x0a1c12);
+    this.scene.background = new THREE.Color(0x0e2417);
 
     this.camera = new THREE.PerspectiveCamera(
       55,
       window.innerWidth / window.innerHeight,
       0.1,
-      600
+      800
     );
-    this.camera.position.set(0, 10, 15);
+    this.camera.position.set(0, 8, 14);
 
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
@@ -79,12 +86,15 @@ class AnacondaGame {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.18;
+    this.renderer.toneMappingExposure = 1.22;
   }
 
   initInputs() {
+    // Keyboard Controls
     window.addEventListener('keydown', (e) => {
+      if (!this.hasUserStarted) this.startGame();
       if (this.isGameOver || !this.snake) return;
+
       switch (e.code) {
         case 'KeyW':
         case 'ArrowUp':
@@ -118,7 +128,7 @@ class AnacondaGame {
           break;
         case 'KeyM':
           const muted = this.audio.toggleMute();
-          this.showToast(muted ? "Audio Muted" : "Audio Active");
+          this.showToast(muted ? 'Audio Muted' : 'Audio Active');
           break;
         case 'KeyP':
           this.togglePause();
@@ -160,25 +170,46 @@ class AnacondaGame {
       }
     });
 
-    window.addEventListener('mousemove', (e) => {
-      if (this.isPaused || this.isGameOver || !this.snake || this.snake.isConstricting) return;
-      const midX = window.innerWidth / 2;
-      const diffX = (e.clientX - midX) / midX;
-      if (Math.abs(diffX) > 0.15) {
-        this.input.left = diffX < 0;
-        this.input.right = diffX > 0;
-      } else {
-        this.input.left = false;
-        this.input.right = false;
+    // 360° Mouse Orbit & Zoom Controls
+    window.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.interactive') || e.target.closest('#start-modal')) return;
+
+      if (e.button === 0) {
+        // Left Click: Drag to orbit camera in 3D
+        this.isDragging = true;
+        this.dragStart.x = e.clientX;
+        this.dragStart.y = e.clientY;
+      } else if (e.button === 2) {
+        // Right Click: Strike
+        if (this.snake) {
+          this.snake.triggerStrike();
+          this.audio.playStrike();
+        }
       }
     });
 
-    window.addEventListener('mousedown', (e) => {
-      if (e.button === 0 && !this.isGameOver && this.snake) {
-        this.snake.triggerStrike();
-        this.audio.playStrike();
+    window.addEventListener('mousemove', (e) => {
+      if (this.isDragging) {
+        const dx = e.clientX - this.dragStart.x;
+        const dy = e.clientY - this.dragStart.y;
+        this.dragStart.x = e.clientX;
+        this.dragStart.y = e.clientY;
+
+        this.orbitYaw -= dx * 0.0075;
+        this.orbitPitch = Math.max(0.06, Math.min(1.42, this.orbitPitch + dy * 0.0075));
       }
     });
+
+    window.addEventListener('mouseup', () => {
+      this.isDragging = false;
+    });
+
+    window.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Mouse Wheel Zoom
+    window.addEventListener('wheel', (e) => {
+      this.orbitDist = Math.max(2.8, Math.min(38.0, this.orbitDist + e.deltaY * 0.012));
+    }, { passive: true });
   }
 
   initMobileControls() {
@@ -211,7 +242,7 @@ class AnacondaGame {
           const clampedDist = Math.min(dist, maxR);
           const angle = Math.atan2(dy, dx);
 
-          joyThumb.style.transform = `translate(${Math.cos(angle) * clampedDist}px, ${Math.sin(angle) * clampedDist}px)`;
+          joyThumb.style.transform = 	ranslate(px, px);
 
           this.input.forward = dy < -10;
           this.input.backward = dy > 15;
@@ -264,6 +295,14 @@ class AnacondaGame {
       btnCam.addEventListener('click', () => this.cycleCamera());
     }
 
+    const btnAudio = document.getElementById('btn-audio');
+    if (btnAudio) {
+      btnAudio.addEventListener('click', () => {
+        const muted = this.audio.toggleMute();
+        btnAudio.classList.toggle('active', !muted);
+      });
+    }
+
     const btnLevel = document.getElementById('btn-next-level');
     if (btnLevel) {
       btnLevel.addEventListener('click', () => {
@@ -274,13 +313,25 @@ class AnacondaGame {
 
     const startBtn = document.getElementById('start-btn');
     if (startBtn) {
-      startBtn.addEventListener('click', () => {
-        document.getElementById('start-modal').style.display = 'none';
-        this.audio.init();
-        this.input.forward = true;
-        this.showToast("You are a juvenile Anaconda. Hunt 5 insects/frogs to grow and unlock Level 2!");
+      startBtn.addEventListener('click', () => this.startGame());
+    }
+
+    const startModal = document.getElementById('start-modal');
+    if (startModal) {
+      startModal.addEventListener('click', (e) => {
+        if (e.target === startModal) this.startGame();
       });
     }
+  }
+
+  startGame() {
+    this.hasUserStarted = true;
+    const modal = document.getElementById('start-modal');
+    if (modal) modal.style.display = 'none';
+
+    this.audio.init();
+    this.input.forward = true;
+    this.showToast('You are a juvenile Anaconda. Hunt 5 insects/frogs to grow and unlock Level 2!');
   }
 
   switchLevel(lvl) {
@@ -292,13 +343,14 @@ class AnacondaGame {
     this.snake.position.set(0, 0.4, 0);
     this.snake.heading = 0;
     this.snake.preyEatenInCurrentLevel = 0;
+    this.orbitYaw = 0;
 
     const names = [
-      "Level 1: The Shallows (Nursery Mudbank)",
-      "Level 2: The Great Tapajós Crossing",
-      "Level 3: Flooded Blackwater Forest (Boss Arena)"
+      'Level 1: The Shallows (Nursery Mudbank)',
+      'Level 2: The Great Tapajós Crossing',
+      'Level 3: Flooded Blackwater Forest (Boss Arena)'
     ];
-    this.showToast(`ENTERING: ${names[lvl - 1]}`, "evolution");
+    this.showToast(ENTERING: , 'evolution');
 
     const lvlNameEl = document.getElementById('level-name-val');
     if (lvlNameEl) lvlNameEl.textContent = names[lvl - 1];
@@ -311,10 +363,10 @@ class AnacondaGame {
 
   triggerEvolutionBanner(stage) {
     const titles = [
-      "Juvenile Predator",
-      "Sub-Adult Evolution: Girth & Length Expanded! Level 2 Unlocked!",
-      "Full Adult Anaconda: Apex Hunting Unlocked!",
-      "Apex Titan Anaconda: Ancient River Monarch!"
+      'Juvenile Predator',
+      'Sub-Adult Evolution: Girth & Length Expanded! Level 2 Unlocked!',
+      'Full Adult Anaconda: Apex Hunting Unlocked!',
+      'Apex Titan Anaconda: Ancient River Monarch!'
     ];
 
     const overlay = document.getElementById('evolution-banner');
@@ -327,74 +379,81 @@ class AnacondaGame {
     }
 
     this.audio.playThermal(true);
-    this.showToast(titles[stage - 1], "evolution");
+    this.showToast(titles[stage - 1], 'evolution');
 
-    if (this.currentLevel === 1) {
+    if (this.currentLevel === 1 && this.world) {
       this.world.unlockGateway();
-      this.showToast("The flooded river gateway is now open! Proceed forward to enter Level 2!");
+      const btnLevel = document.getElementById('btn-next-level');
+      if (btnLevel) btnLevel.style.display = 'inline-block';
     }
   }
 
   toggleThermal() {
     this.isThermalActive = !this.isThermalActive;
     const overlay = document.getElementById('thermal-overlay');
-    if (overlay) overlay.classList.toggle('active', this.isThermalActive);
-    
     const btn = document.getElementById('btn-thermal');
+    if (overlay) overlay.style.display = this.isThermalActive ? 'block' : 'none';
     if (btn) btn.classList.toggle('active', this.isThermalActive);
-
     this.audio.playThermal(this.isThermalActive);
-    this.showToast(this.isThermalActive ? "Thermal Pit Vision: ACTIVE" : "Optical Vision Restored");
   }
 
   cycleCamera() {
     this.cameraMode = (this.cameraMode + 1) % 3;
-    const names = ["Chase Cam", "Tactical Isometric", "Predator 1st-Person"];
-    this.showToast(`Camera: ${names[this.cameraMode]}`);
+    const modes = ['360° Follow Orbit', 'Wide Panoramic', '1st-Person Head'];
+    this.showToast(Camera View: );
   }
 
   togglePause() {
     this.isPaused = !this.isPaused;
-    this.showToast(this.isPaused ? "Game Paused (P)" : "Resumed");
+    this.showToast(this.isPaused ? 'Simulation Paused' : 'Resumed');
   }
 
-  showToast(msg, type = "normal") {
+  showToast(msg, type = 'info') {
     const panel = document.getElementById('notification-panel');
     if (!panel) return;
+
     const toast = document.createElement('div');
-    toast.className = `toast-msg ${type === 'boss' ? 'toast-boss' : (type === 'digestion' ? 'toast-digestion' : (type === 'evolution' ? 'toast-evolution' : ''))}`;
+    toast.className = 
+otification-toast toast-;
     toast.textContent = msg;
     panel.appendChild(toast);
+
     setTimeout(() => {
-      if (toast.parentElement) toast.remove();
-    }, 4000);
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(10px)';
+      setTimeout(() => toast.remove(), 400);
+    }, 3800);
   }
 
   updateHUD() {
     if (!this.snake) return;
+
     const healthFill = document.getElementById('health-fill');
-    if (healthFill) healthFill.style.width = `${Math.max(0, this.snake.health)}%`;
+    if (healthFill) healthFill.style.width = ${Math.max(0, this.snake.health)}%;
 
     const staminaFill = document.getElementById('stamina-fill');
-    if (staminaFill) staminaFill.style.width = `${Math.max(0, this.snake.stamina)}%`;
+    if (staminaFill) staminaFill.style.width = ${Math.max(0, this.snake.stamina)}%;
 
     const hungerFill = document.getElementById('hunger-fill');
-    if (hungerFill) hungerFill.style.width = `${Math.max(0, this.snake.hunger)}%`;
+    if (hungerFill) hungerFill.style.width = ${Math.max(0, this.snake.hunger)}%;
 
     const scoreVal = document.getElementById('score-val');
     if (scoreVal) scoreVal.textContent = this.snake.score;
 
-      const count = this.snake.numSpinePoints || this.snake.numSegments || 28;
-      const dist = this.snake.spineDistance || this.snake.segmentDistance || 0.5;
+    const lengthVal = document.getElementById('length-val');
+    if (lengthVal) {
+      const count = this.snake.numSpinePoints || 28;
+      const dist = this.snake.spineDistance || 0.52;
       const lengthMeters = (count * dist).toFixed(1);
-      lengthVal.textContent = `${lengthMeters}m`;
+      lengthVal.textContent = ${lengthMeters}m;
+    }
 
-    const stageNames = ["Juvenile", "Sub-Adult", "Adult Predator", "Apex Titan"];
+    const stageNames = ['Juvenile', 'Sub-Adult', 'Adult Predator', 'Apex Titan'];
     const apexVal = document.getElementById('apex-val');
     if (apexVal) apexVal.textContent = stageNames[this.snake.growthStage - 1];
 
     const preyCountVal = document.getElementById('prey-count-val');
-    if (preyCountVal) preyCountVal.textContent = `${this.snake.preyEaten} (Goal: 5 to evolve)`;
+    if (preyCountVal) preyCountVal.textContent = ${this.snake.preyEaten} (Goal: 5 to evolve);
 
     const bossPanel = document.getElementById('boss-bar-panel');
     const bossFill = document.getElementById('boss-health-fill');
@@ -403,7 +462,7 @@ class AnacondaGame {
       if (distToBoss < 50) {
         bossPanel.style.display = 'block';
         const pct = (this.fauna.boss.health / this.fauna.boss.maxHealth) * 100;
-        bossFill.style.width = `${pct}%`;
+        bossFill.style.width = ${pct}%;
       } else {
         bossPanel.style.display = 'none';
       }
@@ -420,36 +479,44 @@ class AnacondaGame {
     const headPos = this.snake.getHeadPosition();
     const heading = this.snake.getHeadingAngle();
 
+    // 1. Cinematic Constriction Dynamic Orbit
     if (this.snake.isConstricting) {
-      this.cinematicCamAngle += delta * 1.8;
-      const zoomDist = Math.max(3.5, this.snake.baseRadius * 6.5);
+      this.cinematicCamAngle += delta * 2.0;
+      const zoomDist = Math.max(3.8, this.snake.baseRadius * 7.0);
       const camPos = new THREE.Vector3(
         headPos.x + Math.sin(this.cinematicCamAngle) * zoomDist,
         headPos.y + 1.8 + Math.sin(this.cinematicCamAngle * 0.5) * 0.6,
         headPos.z + Math.cos(this.cinematicCamAngle) * zoomDist
       );
-      this.camera.position.lerp(camPos, 8 * delta);
-      this.camera.lookAt(headPos.x, headPos.y + 0.3, headPos.z);
+      this.camera.position.lerp(camPos, 8.5 * delta);
+      this.camera.lookAt(headPos.x, headPos.y + 0.35, headPos.z);
       return;
     }
 
     const scaleFactor = Math.max(1.0, this.snake.baseRadius / 0.35);
 
     if (this.cameraMode === 0) {
+      // 2. Interactive 360° Follow Orbit Camera
+      const totalYaw = heading + this.orbitYaw;
+      const pitch = this.orbitPitch;
+      const dist = this.orbitDist * scaleFactor;
+
       const camOffset = new THREE.Vector3(
-        Math.sin(heading) * (8 * scaleFactor),
-        4.5 * scaleFactor,
-        Math.cos(heading) * (8 * scaleFactor)
+        Math.sin(totalYaw) * Math.cos(pitch) * dist,
+        Math.sin(pitch) * dist,
+        Math.cos(totalYaw) * Math.cos(pitch) * dist
       );
       const targetCamPos = headPos.clone().add(camOffset);
-      this.camera.position.lerp(targetCamPos, 5.5 * delta);
-      this.camera.lookAt(headPos.x, headPos.y + 0.6 * scaleFactor, headPos.z);
+      this.camera.position.lerp(targetCamPos, 7.5 * delta);
+      this.camera.lookAt(headPos.x, headPos.y + 0.5 * scaleFactor, headPos.z);
     } else if (this.cameraMode === 1) {
-      const dist = 22 * scaleFactor;
-      const targetCamPos = new THREE.Vector3(headPos.x + dist, headPos.y + dist * 1.2, headPos.z + dist);
-      this.camera.position.lerp(targetCamPos, 4 * delta);
+      // Wide Panoramic View
+      const dist = 24 * scaleFactor;
+      const targetCamPos = new THREE.Vector3(headPos.x + dist * 0.8, headPos.y + dist * 1.1, headPos.z + dist * 0.8);
+      this.camera.position.lerp(targetCamPos, 4.5 * delta);
       this.camera.lookAt(headPos);
     } else if (this.cameraMode === 2) {
+      // 1st-Person Head Camera (Snake Eye View)
       const eyeOffset = new THREE.Vector3(
         -Math.sin(heading) * (0.35 * scaleFactor),
         0.35 * scaleFactor,
@@ -457,9 +524,9 @@ class AnacondaGame {
       );
       this.camera.position.copy(headPos).add(eyeOffset);
       const lookTarget = headPos.clone().add(new THREE.Vector3(
-        -Math.sin(heading) * 12,
+        -Math.sin(heading) * 14,
         0.1,
-        -Math.cos(heading) * 12
+        -Math.cos(heading) * 14
       ));
       this.camera.lookAt(lookTarget);
     }
@@ -495,13 +562,13 @@ class AnacondaGame {
       this.snake,
       this.audio,
       (killedPrey) => {
-        this.showToast(`Swallowed ${killedPrey.type.toUpperCase()}! Digesting... (+${killedPrey.nutrition * 15} pts)`, "digestion");
+        this.showToast(Swallowed ! Digesting... (+ pts), 'digestion');
       },
       (newStage) => {
         this.triggerEvolutionBanner(newStage);
       },
       () => {
-        this.showToast("VICTORY! Prehistoric Black Caiman Defeated! You are the Apex Titan Ruler of the Amazon!", "boss");
+        this.showToast('VICTORY! Prehistoric Black Caiman Defeated! You are the Apex Titan Ruler of the Amazon!', 'boss');
       }
     );
 
@@ -516,7 +583,7 @@ class AnacondaGame {
     if (this.snake.health <= 0 && !this.isGameOver) {
       this.isGameOver = true;
       this.audio.playHurt();
-      this.showToast("Game Over: Your Anaconda has starved or succumbed to injuries.", "boss");
+      this.showToast('Game Over: Your Anaconda has starved or succumbed to injuries.', 'boss');
     }
 
     this.updateCamera(delta);

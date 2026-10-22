@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Run Anaconda Survival Game",
+            "request": "launch",
+            "mainClass": "Main",
+            "projectName": "anaconda-amazon-survival"
+        },
+        {
+            "type": "java",
+            "name": "Run Game Verification Tests",
+            "request": "launch",
+            "mainClass": "GameVerificationTest",
+            "projectName": "anaconda-amazon-survival"
+        }
+    ]
+}

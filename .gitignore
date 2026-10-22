@@ -1,0 +1,10 @@
+# Compiled Java class files and build artifacts
+bin/
+*.class
+
+# Runtime save and state data
+save_data.dat
+
+# OS generated files
+.DS_Store
+Thumbs.db
