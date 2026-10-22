@@ -98,7 +98,14 @@ class RadarHUD {
         if (rp.dist > radius - 4) continue;
 
         ctx.save();
-        if (ent.type === 'frog') {
+        if (ent.type === 'insect') {
+          ctx.fillStyle = '#00e5ff';
+          ctx.shadowColor = '#00e5ff';
+          ctx.shadowBlur = 5;
+          ctx.beginPath();
+          ctx.arc(rp.x, rp.y, 2.0, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (ent.type === 'frog') {
           ctx.fillStyle = '#00ff66';
           ctx.shadowColor = '#00ff66';
           ctx.shadowBlur = 6;

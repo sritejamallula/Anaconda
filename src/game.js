@@ -1,4 +1,4 @@
-// Core 3D Game Engine Loop and Controller for Anaconda Amazon Survival
+// Core 3D Game Engine Loop with Cinematic Constriction Camera, Growth Evolution, and Level Progression
 class AnacondaGame {
   constructor() {
     this.container = document.getElementById('game-container');
@@ -7,8 +7,10 @@ class AnacondaGame {
     this.isPaused = false;
     this.isGameOver = false;
     this.isThermalActive = false;
-    this.cameraMode = 0; // 0: Chase, 1: Isometric, 2: 1st-Person Predator
-    
+    this.cameraMode = 0; // 0: Chase, 1: Isometric, 2: 1st-Person
+    this.currentLevel = 1;
+    this.cinematicCamAngle = 0;
+
     // Input state
     this.input = {
       forward: false,
@@ -35,20 +37,17 @@ class AnacondaGame {
   }
 
   initThree() {
-    // 1. Scene
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0c2115);
 
-    // 2. Camera
     this.camera = new THREE.PerspectiveCamera(
       55,
       window.innerWidth / window.innerHeight,
       0.1,
-      500
+      600
     );
-    this.camera.position.set(0, 15, 20);
+    this.camera.position.set(0, 10, 15);
 
-    // 3. Renderer
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
       antialias: true,
@@ -59,11 +58,10 @@ class AnacondaGame {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.1;
+    this.renderer.toneMappingExposure = 1.15;
   }
 
   initInputs() {
-    // Keyboard
     window.addEventListener('keydown', (e) => {
       if (this.isGameOver) return;
       switch (e.code) {
@@ -104,6 +102,15 @@ class AnacondaGame {
         case 'KeyP':
           this.togglePause();
           break;
+        case 'Digit1':
+          this.switchLevel(1);
+          break;
+        case 'Digit2':
+          this.switchLevel(2);
+          break;
+        case 'Digit3':
+          this.switchLevel(3);
+          break;
       }
     });
 
@@ -134,7 +141,7 @@ class AnacondaGame {
 
     // Mouse Steering
     window.addEventListener('mousemove', (e) => {
-      if (this.isPaused || this.isGameOver) return;
+      if (this.isPaused || this.isGameOver || this.snake.isConstricting) return;
       const midX = window.innerWidth / 2;
       const diffX = (e.clientX - midX) / midX;
       if (Math.abs(diffX) > 0.15) {
@@ -225,7 +232,6 @@ class AnacondaGame {
   }
 
   initUI() {
-    // Buttons
     const btnThermal = document.getElementById('btn-thermal');
     if (btnThermal) {
       btnThermal.addEventListener('click', () => this.toggleThermal());
@@ -236,12 +242,11 @@ class AnacondaGame {
       btnCam.addEventListener('click', () => this.cycleCamera());
     }
 
-    const btnMute = document.getElementById('btn-audio');
-    if (btnMute) {
-      btnMute.addEventListener('click', () => {
-        const m = this.audio.toggleMute();
-        btnMute.classList.toggle('active', !m);
-        this.showToast(m ? "Muted" : "Audio On");
+    const btnLevel = document.getElementById('btn-next-level');
+    if (btnLevel) {
+      btnLevel.addEventListener('click', () => {
+        const next = (this.currentLevel % 3) + 1;
+        this.switchLevel(next);
       });
     }
 
@@ -250,9 +255,61 @@ class AnacondaGame {
       startBtn.addEventListener('click', () => {
         document.getElementById('start-modal').style.display = 'none';
         this.audio.init();
-        this.input.forward = true; // start swimming
-        this.showToast("Stalk the Amazon river. Hunt prey to grow!");
+        this.input.forward = true;
+        this.showToast("You are a juvenile Anaconda. Hunt 5 insects/frogs to grow and unlock Level 2!");
       });
+    }
+  }
+
+  switchLevel(lvl) {
+    this.currentLevel = lvl;
+    this.world.loadLevel(lvl);
+    this.fauna.spawnForLevel(lvl);
+
+    // Reposition Snake at level entrance
+    this.snake.position.set(0, 0.4, 0);
+    this.snake.heading = 0;
+    this.snake.preyEatenInCurrentLevel = 0;
+
+    const names = [
+      "Level 1: The Shallows (Nursery Mudbank)",
+      "Level 2: The Great Tapajós Crossing",
+      "Level 3: Flooded Blackwater Forest (Boss Arena)"
+    ];
+    this.showToast(`ENTERING: ${names[lvl - 1]}`, "evolution");
+
+    const lvlNameEl = document.getElementById('level-name-val');
+    if (lvlNameEl) lvlNameEl.textContent = names[lvl - 1];
+
+    const btnLevel = document.getElementById('btn-next-level');
+    if (btnLevel) {
+      btnLevel.style.display = (lvl < 3) ? 'inline-block' : 'none';
+    }
+  }
+
+  triggerEvolutionBanner(stage) {
+    const titles = [
+      "Juvenile Predator",
+      "Sub-Adult Evolution: Girth & Length Expanded! Level 2 Unlocked!",
+      "Full Adult Anaconda: Apex Hunting Unlocked!",
+      "Apex Titan Anaconda: Ancient River Monarch!"
+    ];
+
+    const overlay = document.getElementById('evolution-banner');
+    if (overlay) {
+      overlay.querySelector('.evolution-title').textContent = titles[stage - 1];
+      overlay.style.display = 'flex';
+      setTimeout(() => {
+        overlay.style.display = 'none';
+      }, 4500);
+    }
+
+    this.audio.playThermal(true);
+    this.showToast(titles[stage - 1], "evolution");
+
+    if (this.currentLevel === 1) {
+      this.world.unlockGateway();
+      this.showToast("The flooded river gateway is now open! Proceed forward to enter Level 2!");
     }
   }
 
@@ -283,43 +340,46 @@ class AnacondaGame {
     const panel = document.getElementById('notification-panel');
     if (!panel) return;
     const toast = document.createElement('div');
-    toast.className = `toast-msg ${type === 'boss' ? 'toast-boss' : (type === 'digestion' ? 'toast-digestion' : '')}`;
+    toast.className = `toast-msg ${type === 'boss' ? 'toast-boss' : (type === 'digestion' ? 'toast-digestion' : (type === 'evolution' ? 'toast-evolution' : ''))}`;
     toast.textContent = msg;
     panel.appendChild(toast);
     setTimeout(() => {
       if (toast.parentElement) toast.remove();
-    }, 3500);
+    }, 4000);
   }
 
   updateHUD() {
-    // Health bar
     const healthFill = document.getElementById('health-fill');
     if (healthFill) healthFill.style.width = `${Math.max(0, this.snake.health)}%`;
 
-    // Stamina bar
     const staminaFill = document.getElementById('stamina-fill');
     if (staminaFill) staminaFill.style.width = `${Math.max(0, this.snake.stamina)}%`;
 
-    // Hunger bar
     const hungerFill = document.getElementById('hunger-fill');
     if (hungerFill) hungerFill.style.width = `${Math.max(0, this.snake.hunger)}%`;
 
-    // Stats
     const scoreVal = document.getElementById('score-val');
     if (scoreVal) scoreVal.textContent = this.snake.score;
 
     const lengthVal = document.getElementById('length-val');
-    if (lengthVal) lengthVal.textContent = `${(6.5 + this.snake.growthLevel * 1.8).toFixed(1)}m`;
+    if (lengthVal) {
+      const lengthMeters = (this.snake.numSegments * this.snake.segmentDistance).toFixed(1);
+      lengthVal.textContent = `${lengthMeters}m`;
+    }
 
+    const stageNames = ["Juvenile", "Sub-Adult", "Adult Predator", "Apex Titan"];
     const apexVal = document.getElementById('apex-val');
-    if (apexVal) apexVal.textContent = `Rank ${Math.floor(this.snake.growthLevel)}`;
+    if (apexVal) apexVal.textContent = stageNames[this.snake.growthStage - 1];
+
+    const preyCountVal = document.getElementById('prey-count-val');
+    if (preyCountVal) preyCountVal.textContent = `${this.snake.preyEaten} (Goal: 5 to evolve)`;
 
     // Boss Bar
     const bossPanel = document.getElementById('boss-bar-panel');
     const bossFill = document.getElementById('boss-health-fill');
     if (this.fauna.boss && this.fauna.boss.isAlive) {
       const distToBoss = this.snake.getHeadPosition().distanceTo(this.fauna.boss.getPosition());
-      if (distToBoss < 45) {
+      if (distToBoss < 50) {
         bossPanel.style.display = 'block';
         const pct = (this.fauna.boss.health / this.fauna.boss.maxHealth) * 100;
         bossFill.style.width = `${pct}%`;
@@ -330,42 +390,60 @@ class AnacondaGame {
       if (bossPanel) bossPanel.style.display = 'none';
     }
 
-    // Crosshair ready state
+    // Crosshair state
     const crosshair = document.getElementById('crosshair');
-    if (crosshair) crosshair.classList.toggle('strike-ready', this.snake.stamina > 25);
+    if (crosshair) crosshair.classList.toggle('strike-ready', this.snake.stamina > 20);
   }
 
   updateCamera(delta) {
     const headPos = this.snake.getHeadPosition();
     const heading = this.snake.getHeadingAngle();
 
+    // 1. Cinematic 3D Eating / Constriction Camera Orbit
+    if (this.snake.isConstricting) {
+      this.cinematicCamAngle += delta * 1.8;
+      const zoomDist = Math.max(3.5, this.snake.baseRadius * 6.5);
+      const camPos = new THREE.Vector3(
+        headPos.x + Math.sin(this.cinematicCamAngle) * zoomDist,
+        headPos.y + 1.8 + Math.sin(this.cinematicCamAngle * 0.5) * 0.6,
+        headPos.z + Math.cos(this.cinematicCamAngle) * zoomDist
+      );
+      this.camera.position.lerp(camPos, 8 * delta);
+      this.camera.lookAt(headPos.x, headPos.y + 0.3, headPos.z);
+      return;
+    }
+
+    // 2. Standard Gameplay Camera Modes
+    const scaleFactor = Math.max(1.0, this.snake.baseRadius / 0.35);
+
     if (this.cameraMode === 0) {
       // 3rd-Person Chase Cam
       const camOffset = new THREE.Vector3(
-        Math.sin(heading) * 12,
-        6.5,
-        Math.cos(heading) * 12
+        Math.sin(heading) * (8 * scaleFactor),
+        4.5 * scaleFactor,
+        Math.cos(heading) * (8 * scaleFactor)
       );
       const targetCamPos = headPos.clone().add(camOffset);
-      this.camera.position.lerp(targetCamPos, 5 * delta);
-      this.camera.lookAt(headPos.x, headPos.y + 0.8, headPos.z);
+      this.camera.position.lerp(targetCamPos, 5.5 * delta);
+      this.camera.lookAt(headPos.x, headPos.y + 0.6 * scaleFactor, headPos.z);
     } else if (this.cameraMode === 1) {
       // Tactical Isometric Cam
-      const targetCamPos = new THREE.Vector3(headPos.x + 25, headPos.y + 35, headPos.z + 25);
+      const dist = 22 * scaleFactor;
+      const targetCamPos = new THREE.Vector3(headPos.x + dist, headPos.y + dist * 1.2, headPos.z + dist);
       this.camera.position.lerp(targetCamPos, 4 * delta);
       this.camera.lookAt(headPos);
     } else if (this.cameraMode === 2) {
       // 1st-Person Predator Cam
       const eyeOffset = new THREE.Vector3(
-        -Math.sin(heading) * 0.4,
-        0.5,
-        -Math.cos(heading) * 0.4
+        -Math.sin(heading) * (0.35 * scaleFactor),
+        0.35 * scaleFactor,
+        -Math.cos(heading) * (0.35 * scaleFactor)
       );
       this.camera.position.copy(headPos).add(eyeOffset);
       const lookTarget = headPos.clone().add(new THREE.Vector3(
-        -Math.sin(heading) * 10,
-        0.2,
-        -Math.cos(heading) * 10
+        -Math.sin(heading) * 12,
+        0.1,
+        -Math.cos(heading) * 12
       ));
       this.camera.lookAt(lookTarget);
     }
@@ -387,6 +465,14 @@ class AnacondaGame {
       return;
     }
 
+    // Check Gateway Collision in Level 1 (to transition to Level 2)
+    if (this.currentLevel === 1 && this.snake.preyEaten >= 5) {
+      const headPos = this.snake.getHeadPosition();
+      if (headPos.z > 24 && Math.abs(headPos.x) < 7) {
+        this.switchLevel(2);
+      }
+    }
+
     // Update Subsystems
     this.snake.update(delta, this.input, this.world);
     this.world.update(delta);
@@ -395,10 +481,13 @@ class AnacondaGame {
       this.snake,
       this.audio,
       (killedPrey) => {
-        this.showToast(`Swallowed ${killedPrey.type.toUpperCase()}! Digesting... (+${killedPrey.nutrition * 10} pts)`, "digestion");
+        this.showToast(`Swallowed ${killedPrey.type.toUpperCase()}! Digesting... (+${killedPrey.nutrition * 15} pts)`, "digestion");
+      },
+      (newStage) => {
+        this.triggerEvolutionBanner(newStage);
       },
       () => {
-        this.showToast("VICTORY! Prehistoric Black Caiman Defeated! You are the Apex Ruler!", "boss");
+        this.showToast("VICTORY! Prehistoric Black Caiman Defeated! You are the Apex Titan Ruler of the Amazon!", "boss");
       }
     );
 
@@ -411,11 +500,11 @@ class AnacondaGame {
       }
     }
 
-    // Check Player Death
+    // Player Death Check
     if (this.snake.health <= 0 && !this.isGameOver) {
       this.isGameOver = true;
       this.audio.playHurt();
-      this.showToast("Game Over: Your Anaconda has starved or succumbed to wounds.", "boss");
+      this.showToast("Game Over: Your Anaconda has starved or succumbed to injuries.", "boss");
     }
 
     this.updateCamera(delta);

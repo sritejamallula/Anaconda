@@ -1,4 +1,4 @@
-# Anaconda: Amazon River Apex 🐍🌿
+# Anaconda: Amazon River Apex 3D 🐍🌿
 
 ![Anaconda 3D Banner](assets/art/anaconda_model.jpg)
 
@@ -7,35 +7,48 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20Desktop%20%7C%20Mobile-blue.svg)](#)
 
-> An immersive, real-time 3D survival simulator where you control a massive green anaconda (*Eunectes murinus*) stalking the waterways, flooded forests, and riverbanks of the Amazon basin.
+> An immersive, photorealistic 3D survival simulator where you control a green anaconda (*Eunectes murinus*) from a small juvenile hunting insects to an apex river titan reigning over the Amazon basin.
 
-🎮 **[Play Live in Browser](https://sritejamallula.github.io/anaconda-amazon-survival/)** *(or [vishnuvamsi123.github.io/anaconda-amazon-survival](https://vishnuvamsi123.github.io/anaconda-amazon-survival/))*
+🎮 **[Play Live in Browser (GitHub Pages)](https://vishnuvamsi123.github.io/anaconda-amazon-survival/)**
 
 ---
 
-## 🌟 Key Features
+## 🌟 Realistic 3D Features & Life-Cycle Growth
 
-### 1. Procedural 3D Serpentine Inverse Kinematics
-- **Multi-Joint Skeletal Solver**: 32-segment real-time continuous spine solver that realistically undulates across mudbanks, slips through root labyrinths, and dives through deep water channels.
-- **Dynamic Scale Procedural Shading**: Olive-green dorsal pigmentation with authentic black oval rosettes and an articulated jaw rig capable of high mandibular expansion.
+### 1. Photorealistic 3D Snake & Anatomical Skin
+- **Continuous 3D Body Mesh**: Tubular overlapping skin topology with continuous joint blending, micro-scale normal mapping, and wet specular sheen.
+- **Anatomically Sculpted Head**: Articulated lower jaw capable of 140° expansion, recurved fangs, heat-sensing labial pits, and amber eyes with vertical slit pupils.
+- **Dynamic 3D Constriction & Eating**: Real-time cinematic slow-motion sequence where the camera zooms in, jaws hinge open, coils wrap around the target, and an anatomical bulge travels down the skin with wet specular sheen.
 
-### 2. Anatomical Swallowing & Digestion Bulge
-- **Traveling Vertex Deformation**: When prey is ingested, an anatomical expansion bulge forms behind the head and smoothly travels down the body segments over time.
-- **Growth & Satiety**: Feeding restores satiety, increases body length (up to 15+ meters), broadens girth, and increases your apex rank while adding realistic sluggishness during heavy digestion.
+### 2. Life-Cycle Growth Evolution
+- **Stage 1 (Juvenile - 1.8m, slender 0.18m radius)**: You start small in the nursery shallows. Agile and fast, hunting insects and small tree frogs.
+- **Stage 2 (Sub-Adult - 4.8m, 0.42m radius)**: Triggered after devouring 5 prey! Your length and girth expand, unlocking the passage to the open river crossing.
+- **Stage 3 (Full Adult - 9.5m, 0.72m radius)**: Capable of hunting large mammals like Capybaras and Spectacled Caimans.
+- **Stage 4 (Apex Titan - 14.0m+, 1.05m radius)**: Giant river ruler capable of battling the prehistoric Titan Black Caiman boss.
 
-### 3. Living Amazon Ecosystem
-- **Amazon River Tree Frog (*Osteocephalus taurinus*)**: Agile amphibians hopping along lily pads and logs (Quick strike target).
-- **Forest Spiny Rat (*Proechimys guyannensis*)**: Scurrying bank forager.
-- **Capybara (*Hydrochoerus hydrochaeris*)**: Large semi-aquatic prey that grazes near shorelines and dives into the river to escape.
-- **Spectacled Caiman (*Caiman crocodilus*)**: Dangerous armored predator patrolling shallow channels.
-- **Titan Black Caiman Boss (*Melanosuchus niger*)**: Prehistoric 12-meter apex boss lurking in deep river corridors with a devastating lunge bite and counter-attack.
+### 3. Multi-Level Map Progression
+- **Level 1: "The Shallows" (Small Enclosed Nursery Mudbank, 65m $\times$ 65m)**:
+  - Enclosed muddy sanctuary bordered by dense mangrove roots.
+  - Abundant micro-prey: Amazon Emerald Dragonflies fluttering over water, Jewel Beetles, and small Tree Frogs.
+  - Flooded River Gateway unlocks once 5 prey are eaten to transition to Level 2.
+- **Level 2: "The Great Tapajós Crossing" (Vast Open River Basin, 260m $\times$ 260m)**:
+  - Expansive river system with deep channels, islands, sandbanks, fallen mossy log bridges, swimming waters.
+  - Populated with large fauna: Capybaras grazing on shores, swimming frogs, and Spectacled Caimans.
+- **Level 3: "Flooded Blackwater Forest" (Deep Igapó Swamp, 220m $\times$ 220m)**:
+  - Deep blackwater flooded forest with ancient submerged roots, Victoria amazonica lily pads, and the Titan Black Caiman boss!
 
-### 4. Tactical Bio-Radar HUD & Thermal Pit Vision
-- **Jacobson's Organ / Thermal Mode (`T` key)**: Toggles infrared thermoregulation view, rendering water in cool indigo/cyan while highlighting warm-blooded prey in radiant incandescent heat signatures.
-- **Holographic Bio-Radar**: Real-time circular minimap with river depth contours, orientation heading, and live distance pings for prey, predators, and bosses.
+### 4. Living Amazon Prey Ecosystem
+- **Amazon Emerald Dragonfly (*Odonata*)**: Translucent fluttering wings, hovering flight AI.
+- **Amazon Jewel Beetle (*Coleoptera*)**: Shiny gold-green carapace crawling along roots.
+- **Amazon Tree Frog (*Osteocephalus taurinus*)**: Glossy wet skin, hopping animations.
+- **Forest Spiny Rat (*Proechimys guyannensis*)**: Bank forager scurrying along mudbanks.
+- **Capybara (*Hydrochoerus hydrochaeris*)**: Semi-aquatic mammal grazing on shores and diving into water to flee.
+- **Spectacled Caiman (*Caiman crocodilus*)**: Armored river patrol predator.
+- **Titan Black Caiman Boss (*Melanosuchus niger*)**: Prehistoric 12-meter apex boss with 500 HP, charge attacks, and custom boss health bar.
 
-### 5. Zero-Dependency Web Audio Synthesizer
-- Built-in procedural sound engine utilizing the Web Audio API—generates ambient nocturnal jungle crickets, river wash, slithering friction, striking whooshes, bone snaps, and throat gulping without requiring external sound files.
+### 5. Tactical Bio-Radar HUD & Thermal Pit Vision
+- **Jacobson's Organ / Thermal Mode (`T` key / `HEAT` button)**: Infrared sensory shader rendering water in deep blue while lighting up warm-blooded prey in radiant incandescent red and orange.
+- **Tactical Bio-Radar**: Real-time circular minimap with range rings, rotating sweep line, topographic river contours, and color-coded entity blips.
 
 ---
 
@@ -46,9 +59,10 @@
 | **Move / Slither** | `W` / `S` or `↑` / `↓` | Virtual Joystick (Up/Down) |
 | **Steer Heading** | `A` / `D` or `←` / `→` (or Mouse position) | Virtual Joystick (Left/Right) |
 | **Sprint Burst** | `Shift` (Uses Stamina) | Joystick Outer Ring Drag |
-| **Strike / Bite** | `Spacebar` or `Left Mouse Click` | `STRIKE` Button |
+| **Strike & Constrict** | `Spacebar` or `Left Mouse Click` | `STRIKE` Button |
 | **Thermal Pit Vision** | `T` Key | `HEAT` Button |
 | **Cycle Camera** | `C` Key (Chase, Isometric, 1st-Person) | `[C] CAMERA` HUD Button |
+| **Direct Level Jump** | `1`, `2`, or `3` Keys | `ADVANCE LEVEL` Button |
 | **Mute Audio** | `M` Key | `[M] AUDIO` HUD Button |
 | **Pause Game** | `P` Key | — |
 
@@ -79,8 +93,6 @@
 ---
 
 ## 🚀 Running Locally
-
-Because the game is completely self-contained with vendored Three.js and procedural Web Audio, you can run it with any local static HTTP server:
 
 ```bash
 # Using Python 3

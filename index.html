@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Anaconda: Amazon River Apex 3D</title>
+  <title>Anaconda: Amazon River Apex 3D - Realistic Survival</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,12 +17,24 @@
     <div class="thermal-scanlines"></div>
   </div>
 
+  <!-- Fullscreen Dynamic Evolution Banner -->
+  <div id="evolution-banner">
+    <div class="evolution-heading">METAMORPHOSIS & EVOLUTION</div>
+    <div class="evolution-title">Sub-Adult Evolution: Girth & Length Expanded!</div>
+    <div class="evolution-desc">You are now large enough to navigate deep water channels and hunt mammals!</div>
+  </div>
+
   <!-- In-Game UI Layer -->
   <div id="ui-overlay">
     <!-- Top HUD Bar -->
     <div class="top-bar">
-      <!-- Player Stats -->
+      <!-- Player Stats & Growth Progression -->
       <div class="stats-panel interactive">
+        <div class="current-level-badge">
+          <span id="level-name-val">Level 1: The Shallows (Nursery Mudbank)</span>
+          <span id="growth-stage-badge">STAGE 1</span>
+        </div>
+
         <div class="stat-row">
           <span>Health</span>
           <div class="bar-container">
@@ -41,15 +53,18 @@
             <div id="hunger-fill" class="bar-fill"></div>
           </div>
         </div>
+
         <div class="info-display">
           <div class="info-item">SCORE: <span id="score-val">0</span></div>
-          <div class="info-item">LENGTH: <span id="length-val">6.5m</span></div>
-          <div class="info-item">APEX: <span id="apex-val">Rank 1</span></div>
+          <div class="info-item">LENGTH: <span id="length-val">1.8m</span></div>
+          <div class="info-item">GROWTH: <span id="apex-val">Juvenile</span></div>
+          <div class="info-item">PREY: <span id="prey-count-val">0 (5 to evolve)</span></div>
         </div>
       </div>
 
       <!-- Quick Action Controls -->
       <div class="controls-panel interactive">
+        <button id="btn-next-level" class="hud-btn" style="display:none;" title="Advance to Next Amazon Level">ADVANCE LEVEL &rarr;</button>
         <button id="btn-thermal" class="hud-btn" title="Toggle Thermal Pit Vision (T)">[T] THERMAL</button>
         <button id="btn-camera" class="hud-btn" title="Cycle Camera Views (C)">[C] CAMERA</button>
         <button id="btn-audio" class="hud-btn active" title="Mute Audio (M)">[M] AUDIO</button>
@@ -64,8 +79,8 @@
     <!-- Boss Encounter Health Bar -->
     <div id="boss-bar-panel">
       <div class="boss-title">
-        <span>Titan Black Caiman (Apex Boss)</span>
-        <span id="boss-hp-text">450 / 450</span>
+        <span>Titan Black Caiman (Prehistoric Apex Boss)</span>
+        <span id="boss-hp-text">500 / 500</span>
       </div>
       <div class="boss-bar-track">
         <div id="boss-health-fill"></div>
@@ -97,17 +112,21 @@
   <!-- Start Game & Tutorial Modal -->
   <div id="start-modal" class="modal-overlay">
     <div class="modal-card">
-      <h1 class="modal-title">ANACONDA</h1>
-      <p class="modal-subtitle">Amazon River Apex Predator &bull; 3D Survival Simulator</p>
+      <h1 class="modal-title">ANACONDA 3D</h1>
+      <p class="modal-subtitle">Amazon River Apex Predator &bull; Realistic Life-Cycle & Survival Simulator</p>
 
       <div class="guide-grid">
-        <div class="guide-item"><kbd>W</kbd> <kbd>S</kbd> / <kbd>&uarr;</kbd> <kbd>&darr;</kbd> Slither / Swim Forward & Backward</div>
+        <div class="guide-item"><kbd>W</kbd> <kbd>S</kbd> / <kbd>&uarr;</kbd> <kbd>&darr;</kbd> Slither / Swim (Forward & Backward)</div>
         <div class="guide-item"><kbd>A</kbd> <kbd>D</kbd> / <kbd>&larr;</kbd> <kbd>&rarr;</kbd> Steer Heading Left & Right</div>
         <div class="guide-item"><kbd>SPACE</kbd> / <kbd>L-Click</kbd> Strike & Constrict Prey</div>
-        <div class="guide-item"><kbd>SHIFT</kbd> Sprint Undulation (Uses Stamina)</div>
-        <div class="guide-item"><kbd>T</kbd> Thermal Pit Vision (Detect Warm Prey)</div>
-        <div class="guide-item"><kbd>C</kbd> Switch Camera (Chase, Top-Down, 1st-Person)</div>
+        <div class="guide-item"><kbd>SHIFT</kbd> Sprint Burst (Uses Stamina)</div>
+        <div class="guide-item"><kbd>T</kbd> Thermal Pit Vision (Detect Warm Heat Signatures)</div>
+        <div class="guide-item"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> Jump Directly to Levels 1, 2, or 3</div>
       </div>
+
+      <p style="font-size:12px; color:#85c29d; margin-bottom: 20px;">
+        <strong>Life-Cycle Objective:</strong> Start as a small 1.8m juvenile in the enclosed nursery shallows. Hunt 5 insects or small tree frogs to trigger your first growth evolution, expand your length and girth, and unlock the passage to the vast Tapajós River Crossing!
+      </p>
 
       <button id="start-btn" class="btn-start">ENTER THE AMAZON</button>
     </div>

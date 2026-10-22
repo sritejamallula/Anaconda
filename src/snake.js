@@ -1,145 +1,241 @@
-// 3D Procedural Rigged Green Anaconda with Spine IK and Swallowing Bulge Deformation
+// Realistic 3D Green Anaconda with Anatomical Skin, Growth Evolution, and 3D Constriction Sequence
 class AnacondaSnake {
   constructor(scene) {
     this.scene = scene;
-    this.numSegments = 32;
-    this.segmentDistance = 0.85;
-    this.baseRadius = 0.55;
+    
+    // Growth Stages: 1 = Juvenile, 2 = Sub-Adult, 3 = Adult, 4 = Apex Titan
+    this.growthStage = 1;
+    this.preyEaten = 0;
+    this.preyEatenInCurrentLevel = 0;
+    this.requiredPreyToEvolve = 5;
+
+    // Body Dimensions (Scales dynamically with growth stages)
+    this.numSegments = 24; // Starts juvenile (24 segments, 1.8m)
+    this.segmentDistance = 0.55;
+    this.baseRadius = 0.18; // Slender juvenile start
     this.segments = [];
     this.segmentMeshes = [];
-    this.digestingPrey = []; // { size, progress, speed }
-    
-    // Physics and Locomotion
-    this.position = new THREE.Vector3(0, 0.4, 0);
+    this.digestingPrey = [];
+
+    // Physics & Locomotion
+    this.position = new THREE.Vector3(0, 0.25, 0);
     this.velocity = new THREE.Vector3();
-    this.heading = 0; // Yaw angle in radians
-    this.pitch = 0;   // Vertical pitch
+    this.heading = 0;
     this.speed = 0;
-    this.baseSpeed = 7.5;
-    this.boostMultiplier = 1.7;
-    this.turnSpeed = 2.8;
+    this.baseSpeed = 6.8;
+    this.boostMultiplier = 1.65;
+    this.turnSpeed = 3.2;
     this.wavePhase = 0;
-    
-    // State
+    this.isUnderwater = false;
+
+    // Stats
     this.health = 100;
     this.maxHealth = 100;
     this.stamina = 100;
     this.maxStamina = 100;
-    this.hunger = 80; // 0-100
-    this.growthLevel = 1;
+    this.hunger = 85;
     this.score = 0;
+
+    // Strike & Cinematic Constriction State Machine
     this.isStriking = false;
     this.strikeTimer = 0;
-    this.strikeDuration = 0.35;
+    this.strikeDuration = 0.32;
+    this.isConstricting = false;
+    this.constrictionTimer = 0;
+    this.constrictionDuration = 1.4; // 1.4s 3D cinematic eating scene
+    this.constrictionTarget = null;
     this.tongueFlickTimer = 0;
-    this.isUnderwater = false;
 
-    // Materials & Textures
-    this.scaleTexture = this.generateScaleTexture();
-    this.bellyTexture = this.generateBellyTexture();
-    
+    // High-Fidelity Textures
+    this.scaleTexture = this.generateRealisticScaleTexture();
+    this.bellyTexture = this.generateRealisticBellyTexture();
+    this.normalTexture = this.generateScaleNormalTexture();
+
     this.initBody();
   }
 
-  generateScaleTexture() {
+  generateRealisticScaleTexture() {
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
+    canvas.width = 1024;
+    canvas.height = 1024;
     const ctx = canvas.getContext('2d');
 
-    // Base olive green background
-    ctx.fillStyle = '#2f4a21';
-    ctx.fillRect(0, 0, 512, 512);
+    // Rich olive-green jungle background with subtle depth gradient
+    const bgGrad = ctx.createLinearGradient(0, 0, 1024, 1024);
+    bgGrad.addColorStop(0, '#2b441d');
+    bgGrad.addColorStop(0.5, '#355423');
+    bgGrad.addColorStop(1, '#253b19');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 1024, 1024);
 
-    // Subtle scale diamond pattern
-    ctx.fillStyle = '#395928';
-    for (let y = 0; y < 512; y += 16) {
-      for (let x = 0; x < 512; x += 16) {
+    // Overlapping Diamond Keratinized Scales
+    const scaleWidth = 18;
+    const scaleHeight = 26;
+    for (let y = 0; y < 1024; y += scaleHeight * 0.5) {
+      const rowOffset = (Math.floor(y / (scaleHeight * 0.5)) % 2 === 0) ? 0 : scaleWidth * 0.5;
+      for (let x = -scaleWidth; x < 1024 + scaleWidth; x += scaleWidth) {
+        ctx.save();
+        ctx.translate(x + rowOffset, y);
+
+        // Individual scale gradient for 3D curved convexity
+        const sGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, scaleWidth * 0.7);
+        sGrad.addColorStop(0, '#4a7032');
+        sGrad.addColorStop(0.6, '#385726');
+        sGrad.addColorStop(1, '#1e3015');
+        ctx.fillStyle = sGrad;
+
         ctx.beginPath();
-        const ox = (y % 32 === 0) ? 8 : 0;
-        ctx.arc(x + ox, y, 6, 0, Math.PI * 2);
+        ctx.moveTo(0, -scaleHeight * 0.5);
+        ctx.lineTo(scaleWidth * 0.5, 0);
+        ctx.lineTo(0, scaleHeight * 0.5);
+        ctx.lineTo(-scaleWidth * 0.5, 0);
+        ctx.closePath();
         ctx.fill();
+
+        // Delicate scale rim highlight
+        ctx.strokeStyle = 'rgba(120, 165, 85, 0.28)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.restore();
       }
     }
 
-    // Iconic Anaconda Dark Oval Rosettes (Spots)
-    ctx.fillStyle = '#0f180a';
-    for (let i = 0; i < 48; i++) {
-      const rx = (i * 97) % 512;
-      const ry = (i * 131) % 512;
-      const w = 18 + (i % 5) * 4;
-      const h = 26 + (i % 7) * 4;
-      ctx.beginPath();
-      ctx.ellipse(rx, ry, w, h, (i * 0.4), 0, Math.PI * 2);
-      ctx.fill();
+    // Iconic Anaconda Dark Dorsal Oval Ocelli (Spots) with orange-yellow halos
+    for (let i = 0; i < 75; i++) {
+      const rx = (i * 179 + 53) % 1024;
+      const ry = (i * 241 + 89) % 1024;
+      const w = 28 + (i % 6) * 6;
+      const h = 42 + (i % 7) * 7;
+      const angle = (i * 0.5);
 
-      // Subtle yellow-orange rim
-      ctx.strokeStyle = '#6e8038';
-      ctx.lineWidth = 3;
+      // Yellow-orange halo border
+      ctx.strokeStyle = 'rgba(165, 150, 60, 0.55)';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.ellipse(rx, ry, w + 4, h + 4, angle, 0, Math.PI * 2);
       ctx.stroke();
+
+      // Jet-black velvet core
+      ctx.fillStyle = '#0a1007';
+      ctx.beginPath();
+      ctx.ellipse(rx, ry, w, h, angle, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.wrapS = THREE.RepeatWrapping;
     tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(2, 2);
+    tex.repeat.set(3, 4);
     return tex;
   }
 
-  generateBellyTexture() {
+  generateRealisticBellyTexture() {
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
+    canvas.width = 512;
+    canvas.height = 512;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#b5b875';
-    ctx.fillRect(0, 0, 256, 256);
 
-    ctx.fillStyle = '#9e9f60';
-    for (let y = 0; y < 256; y += 24) {
-      ctx.fillRect(0, y, 256, 4);
+    // Creamy pale yellow underbelly plates (ventral scutes)
+    ctx.fillStyle = '#c7c485';
+    ctx.fillRect(0, 0, 512, 512);
+
+    for (let y = 0; y < 512; y += 32) {
+      const grad = ctx.createLinearGradient(0, y, 0, y + 32);
+      grad.addColorStop(0, '#dad698');
+      grad.addColorStop(0.8, '#b5b272');
+      grad.addColorStop(1, '#8f8c54');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, y, 512, 30);
+
+      // Irregular dark markings on side scutes
+      if ((y / 32) % 2 === 0) {
+        ctx.fillStyle = '#323d20';
+        ctx.fillRect(10, y + 6, 22, 18);
+        ctx.fillRect(480, y + 6, 22, 18);
+      }
     }
     const tex = new THREE.CanvasTexture(canvas);
     return tex;
   }
 
+  generateScaleNormalTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'rgb(128, 128, 255)'; // Neutral tangent normal
+    ctx.fillRect(0, 0, 512, 512);
+
+    // Bump hills
+    for (let y = 0; y < 512; y += 16) {
+      for (let x = 0; x < 512; x += 16) {
+        ctx.fillStyle = 'rgb(145, 110, 240)';
+        ctx.beginPath();
+        ctx.arc(x + 8, y + 8, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(4, 4);
+    return tex;
+  }
+
   initBody() {
+    // If existing group exists, remove it
+    if (this.bodyGroup) {
+      this.scene.remove(this.bodyGroup);
+    }
+
     this.bodyGroup = new THREE.Group();
     this.scene.add(this.bodyGroup);
 
-    // Common Scale Material with PBR sheen
+    // PBR Photorealistic Serpent Skin Material
     this.bodyMaterial = new THREE.MeshStandardMaterial({
       map: this.scaleTexture,
-      roughness: 0.35,
-      metalness: 0.15,
-      color: 0x486b36
+      normalMap: this.normalTexture,
+      normalScale: new THREE.Vector2(0.85, 0.85),
+      roughness: 0.28, // Wet specular sheen
+      metalness: 0.12,
+      color: 0x557a40
     });
 
-    // 1. Create Head
-    this.createHead();
+    this.bellyMaterial = new THREE.MeshStandardMaterial({
+      map: this.bellyTexture,
+      roughness: 0.45,
+      color: 0xadab74
+    });
 
-    // 2. Create Segments
+    // 1. Create Sculpted Head
+    this.createSculptedHead();
+
+    // 2. Create Continuous Segment Meshes
+    this.segments = [];
+    this.segmentMeshes = [];
+
     for (let i = 0; i < this.numSegments; i++) {
       const t = i / (this.numSegments - 1);
-      // Taper profile: wide in front-midbody, tapering down to a slender tail tip
       let taper = 1.0;
       if (i < 3) {
-        taper = 0.8 + (i / 3) * 0.2; // Neck taper
+        taper = 0.75 + (i / 3) * 0.25; // Narrow neck
       } else {
-        taper = Math.sin((1 - t) * Math.PI * 0.5) * 0.95 + 0.05; // Tail taper
+        // Natural tapered snake tail curve
+        taper = Math.sin((1 - t) * Math.PI * 0.5) * 0.94 + 0.06;
       }
 
       const radius = this.baseRadius * taper;
-      const length = this.segmentDistance;
 
-      // Elongated segment sphere/cylinder
-      const geom = new THREE.SphereGeometry(radius, 14, 12);
-      geom.scale(1.0, 0.8, 1.25); // Slightly flattened serpentine cross-section
+      // High-poly tubular skin segment with continuous overlap
+      const geom = new THREE.CylinderGeometry(radius * 0.92, radius * 1.05, this.segmentDistance * 1.25, 16, 2, false);
+      geom.rotateX(Math.PI * 0.5);
+      geom.scale(1.0, 0.78, 1.0); // Natural dorsoventrally compressed snake cross-section
 
       const mesh = new THREE.Mesh(geom, this.bodyMaterial);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
 
-      const pos = new THREE.Vector3(0, 0.4, i * this.segmentDistance);
+      const pos = new THREE.Vector3(0, 0.2, i * this.segmentDistance);
       mesh.position.copy(pos);
 
       this.bodyGroup.add(mesh);
@@ -155,139 +251,232 @@ class AnacondaSnake {
     }
   }
 
-  createHead() {
+  createSculptedHead() {
     this.headGroup = new THREE.Group();
     this.bodyGroup.add(this.headGroup);
 
-    // Cranium
-    const craniumGeom = new THREE.BoxGeometry(0.75, 0.45, 1.15, 4, 3, 4);
+    const headScale = this.baseRadius * 1.9;
+
+    // Sculpted Broad Cranium
+    const craniumGeom = new THREE.BoxGeometry(0.85 * headScale, 0.42 * headScale, 1.35 * headScale, 4, 3, 5);
     const craniumMat = new THREE.MeshStandardMaterial({
       map: this.scaleTexture,
-      roughness: 0.4,
+      normalMap: this.normalTexture,
+      roughness: 0.32,
       metalness: 0.1,
-      color: 0x3d5c2e
+      color: 0x486b36
     });
     this.craniumMesh = new THREE.Mesh(craniumGeom, craniumMat);
-    this.craniumMesh.position.set(0, 0.1, -0.4);
+    this.craniumMesh.position.set(0, 0.08 * headScale, -0.45 * headScale);
     this.craniumMesh.castShadow = true;
     this.headGroup.add(this.craniumMesh);
 
-    // Snout taper
-    const snoutGeom = new THREE.ConeGeometry(0.38, 0.6, 6);
+    // Tapered Snout
+    const snoutGeom = new THREE.ConeGeometry(0.42 * headScale, 0.75 * headScale, 8);
     snoutGeom.rotateX(-Math.PI * 0.5);
-    snoutGeom.scale(1, 0.6, 1);
+    snoutGeom.scale(1, 0.52, 1);
     const snoutMesh = new THREE.Mesh(snoutGeom, craniumMat);
-    snoutMesh.position.set(0, 0.05, -1.1);
+    snoutMesh.position.set(0, 0.02 * headScale, -1.25 * headScale);
     this.headGroup.add(snoutMesh);
 
-    // Amber Eyes with vertical slit pupils
-    const eyeGeom = new THREE.SphereGeometry(0.12, 12, 12);
+    // Realistic Labial Pits (Heat-sensing holes along mouth line)
+    for (let side of [-1, 1]) {
+      for (let p = 0; p < 3; p++) {
+        const pitGeom = new THREE.BoxGeometry(0.04 * headScale, 0.03 * headScale, 0.06 * headScale);
+        const pitMat = new THREE.MeshBasicMaterial({ color: 0x11160e });
+        const pit = new THREE.Mesh(pitGeom, pitMat);
+        pit.position.set(side * 0.42 * headScale, 0.02 * headScale, (-0.85 - p * 0.14) * headScale);
+        this.headGroup.add(pit);
+      }
+    }
+
+    // Specular Wet Amber Eyes with Vertical Slit Pupils
+    const eyeGeom = new THREE.SphereGeometry(0.14 * headScale, 14, 14);
     const eyeMat = new THREE.MeshStandardMaterial({
-      color: 0xffaa00,
-      roughness: 0.1,
-      metalness: 0.3,
-      emissive: 0x442200
+      color: 0xffa500,
+      roughness: 0.05,
+      metalness: 0.4,
+      emissive: 0x552200
     });
     
     this.leftEye = new THREE.Mesh(eyeGeom, eyeMat);
-    this.leftEye.position.set(0.38, 0.18, -0.5);
-    this.leftEye.scale.set(0.7, 1.2, 1);
+    this.leftEye.position.set(0.44 * headScale, 0.18 * headScale, -0.6 * headScale);
     this.headGroup.add(this.leftEye);
 
     this.rightEye = new THREE.Mesh(eyeGeom, eyeMat);
-    this.rightEye.position.set(-0.38, 0.18, -0.5);
-    this.rightEye.scale.set(0.7, 1.2, 1);
+    this.rightEye.position.set(-0.44 * headScale, 0.18 * headScale, -0.6 * headScale);
     this.headGroup.add(this.rightEye);
 
-    // Pupils
-    const pupilGeom = new THREE.BoxGeometry(0.02, 0.14, 0.04);
+    // Vertical slit pupils
+    const pupilGeom = new THREE.BoxGeometry(0.02 * headScale, 0.18 * headScale, 0.05 * headScale);
     const pupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    const leftPupil = new THREE.Mesh(pupilGeom, pupilMat);
-    leftPupil.position.set(0.44, 0.18, -0.5);
-    this.headGroup.add(leftPupil);
-    const rightPupil = new THREE.Mesh(pupilGeom, pupilMat);
-    rightPupil.position.set(-0.44, 0.18, -0.5);
-    this.headGroup.add(rightPupil);
+    const pupilL = new THREE.Mesh(pupilGeom, pupilMat);
+    pupilL.position.set(0.51 * headScale, 0.18 * headScale, -0.6 * headScale);
+    this.headGroup.add(pupilL);
+    const pupilR = new THREE.Mesh(pupilGeom, pupilMat);
+    pupilR.position.set(-0.51 * headScale, 0.18 * headScale, -0.6 * headScale);
+    this.headGroup.add(pupilR);
 
-    // Lower Jaw (Hinged for strike/bite)
-    const jawGeom = new THREE.BoxGeometry(0.68, 0.18, 1.1);
+    // Articulated Lower Jaw (Capable of 140° opening during ingestion)
+    this.lowerJawGroup = new THREE.Group();
+    this.lowerJawGroup.position.set(0, -0.12 * headScale, -0.2 * headScale);
+    this.headGroup.add(this.lowerJawGroup);
+
+    const jawGeom = new THREE.BoxGeometry(0.76 * headScale, 0.16 * headScale, 1.25 * headScale);
     const jawMat = new THREE.MeshStandardMaterial({
       map: this.bellyTexture,
-      roughness: 0.5,
-      color: 0x859654
+      roughness: 0.4,
+      color: 0x8a995e
     });
-    this.lowerJaw = new THREE.Mesh(jawGeom, jawMat);
-    this.lowerJaw.position.set(0, -0.15, -0.4);
-    this.headGroup.add(this.lowerJaw);
+    const jawMesh = new THREE.Mesh(jawGeom, jawMat);
+    jawMesh.position.set(0, 0, -0.55 * headScale);
+    this.lowerJawGroup.add(jawMesh);
 
-    // Recurved Fangs inside mouth
-    const fangGeom = new THREE.ConeGeometry(0.04, 0.22, 6);
-    fangGeom.rotateX(0.3);
-    const fangMat = new THREE.MeshStandardMaterial({ color: 0xffffee, roughness: 0.1 });
+    // Sharp Recurved Fangs
+    const fangGeom = new THREE.ConeGeometry(0.045 * headScale, 0.28 * headScale, 6);
+    fangGeom.rotateX(0.35);
+    const fangMat = new THREE.MeshStandardMaterial({ color: 0xfffff0, roughness: 0.1 });
     
-    const leftFang = new THREE.Mesh(fangGeom, fangMat);
-    leftFang.position.set(0.25, -0.02, -0.85);
-    this.headGroup.add(leftFang);
+    this.leftFang = new THREE.Mesh(fangGeom, fangMat);
+    this.leftFang.position.set(0.3 * headScale, 0.02 * headScale, -1.0 * headScale);
+    this.headGroup.add(this.leftFang);
 
-    const rightFang = new THREE.Mesh(fangGeom, fangMat);
-    rightFang.position.set(-0.25, -0.02, -0.85);
-    this.headGroup.add(rightFang);
+    this.rightFang = new THREE.Mesh(fangGeom, fangMat);
+    this.rightFang.position.set(-0.3 * headScale, 0.02 * headScale, -1.0 * headScale);
+    this.headGroup.add(this.rightFang);
 
-    // Bifurcated (Forked) Tongue
+    // Bifurcated Tongue
     this.tongueGroup = new THREE.Group();
-    const tongueStemGeom = new THREE.CylinderGeometry(0.025, 0.025, 0.45);
-    tongueStemGeom.rotateX(-Math.PI * 0.5);
-    const tongueMat = new THREE.MeshBasicMaterial({ color: 0x880022 });
-    const stem = new THREE.Mesh(tongueStemGeom, tongueMat);
+    const stem = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.025 * headScale, 0.025 * headScale, 0.5 * headScale),
+      new THREE.MeshBasicMaterial({ color: 0x990022 })
+    );
+    stem.rotateX(-Math.PI * 0.5);
     this.tongueGroup.add(stem);
 
-    const forkLeft = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.005, 0.2), tongueMat);
-    forkLeft.rotation.set(0, 0.35, -Math.PI * 0.5);
-    forkLeft.position.set(0.05, 0, -0.3);
-    this.tongueGroup.add(forkLeft);
+    const forkL = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.015 * headScale, 0.005 * headScale, 0.22 * headScale),
+      new THREE.MeshBasicMaterial({ color: 0x990022 })
+    );
+    forkL.rotation.set(0, 0.35, -Math.PI * 0.5);
+    forkL.position.set(0.06 * headScale, 0, -0.35 * headScale);
+    this.tongueGroup.add(forkL);
 
-    const forkRight = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.005, 0.2), tongueMat);
-    forkRight.rotation.set(0, -0.35, -Math.PI * 0.5);
-    forkRight.position.set(-0.05, 0, -0.3);
-    this.tongueGroup.add(forkRight);
+    const forkR = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.015 * headScale, 0.005 * headScale, 0.22 * headScale),
+      new THREE.MeshBasicMaterial({ color: 0x990022 })
+    );
+    forkR.rotation.set(0, -0.35, -Math.PI * 0.5);
+    forkR.position.set(-0.06 * headScale, 0, -0.35 * headScale);
+    this.tongueGroup.add(forkR);
 
-    this.tongueGroup.position.set(0, -0.08, -0.9);
-    this.tongueGroup.scale.set(0, 0, 0); // hidden initially
+    this.tongueGroup.position.set(0, -0.06 * headScale, -1.05 * headScale);
+    this.tongueGroup.scale.set(0, 0, 0);
     this.headGroup.add(this.tongueGroup);
   }
 
   triggerStrike() {
-    if (this.isStriking || this.stamina < 15) return;
+    if (this.isStriking || this.isConstricting || this.stamina < 15) return;
     this.isStriking = true;
     this.strikeTimer = this.strikeDuration;
-    this.stamina = Math.max(0, this.stamina - 18);
+    this.stamina = Math.max(0, this.stamina - 15);
   }
 
-  swallowPrey(size = 1.0, nutritionalValue = 20) {
+  // 3D Cinematic Constriction & Swallowing Sequence
+  startCinematicConstriction(targetEntity) {
+    this.isConstricting = true;
+    this.constrictionTimer = this.constrictionDuration;
+    this.constrictionTarget = targetEntity;
+    this.lowerJawGroup.rotation.x = 0.95; // Open jaw wide
+  }
+
+  swallowPrey(size = 1.0, nutrition = 20) {
+    this.preyEaten++;
+    this.preyEatenInCurrentLevel++;
+    this.hunger = Math.min(100, this.hunger + nutrition);
+    this.score += Math.round(nutrition * 15);
+
+    // Add traveling 3D digestive bulge
     this.digestingPrey.push({
-      size: Math.min(2.2, Math.max(0.6, size)),
+      size: Math.min(2.4, Math.max(0.65, size)),
       progress: 0,
-      speed: 0.12 // segments per second
+      speed: 0.16
     });
-    this.hunger = Math.min(100, this.hunger + nutritionalValue);
-    this.score += Math.round(nutritionalValue * 10);
-    this.grow(0.04 * size);
+
+    // Check Evolution Trigger (5 prey eaten in Level 1)
+    if (this.growthStage === 1 && this.preyEaten >= 5) {
+      this.evolveToStage(2);
+      return true; // evolution triggered!
+    } else if (this.growthStage === 2 && this.preyEaten >= 12) {
+      this.evolveToStage(3);
+      return true;
+    } else if (this.growthStage === 3 && this.preyEaten >= 20) {
+      this.evolveToStage(4);
+      return true;
+    }
+
+    // Natural minor growth with every meal
+    this.growContinuous(0.018 * size);
+    return false;
   }
 
-  grow(amount) {
-    this.baseRadius += amount * 0.08;
-    this.growthLevel += amount * 0.1;
+  evolveToStage(newStage) {
+    this.growthStage = newStage;
+    if (newStage === 2) {
+      // Sub-Adult: 4.8m length, broader girth
+      this.numSegments = 30;
+      this.segmentDistance = 0.72;
+      this.baseRadius = 0.42;
+      this.baseSpeed = 7.5;
+    } else if (newStage === 3) {
+      // Full Adult: 9.5m length, massive predator
+      this.numSegments = 36;
+      this.segmentDistance = 0.88;
+      this.baseRadius = 0.72;
+      this.baseSpeed = 8.2;
+    } else if (newStage === 4) {
+      // Apex Titan: 14.0m+ length
+      this.numSegments = 42;
+      this.segmentDistance = 1.05;
+      this.baseRadius = 1.05;
+      this.baseSpeed = 9.0;
+    }
+
+    this.initBody();
+  }
+
+  growContinuous(amount) {
+    this.baseRadius += amount * 0.05;
     for (let i = 0; i < this.segments.length; i++) {
       this.segments[i].baseRadius = this.baseRadius * this.segments[i].taper;
     }
   }
 
-  hasDigestingPrey() {
-    return this.digestingPrey.length > 0;
-  }
-
   update(delta, input, world) {
-    // 1. Steering & Rotation
+    // 1. Constriction Cinematic Freeze / Coil Wrap
+    if (this.isConstricting) {
+      this.constrictionTimer -= delta;
+      const progress = 1 - (this.constrictionTimer / this.constrictionDuration);
+
+      // Clamp jaw opening and mouth swallowing
+      this.lowerJawGroup.rotation.x = Math.sin(progress * Math.PI) * 1.1;
+
+      // Wrap body coils tightly around target
+      if (this.constrictionTarget && this.constrictionTarget.mesh) {
+        const targetPos = this.constrictionTarget.position;
+        // Head moves down over prey
+        this.position.lerp(targetPos, 4 * delta);
+      }
+
+      if (this.constrictionTimer <= 0) {
+        this.isConstricting = false;
+        this.lowerJawGroup.rotation.x = 0;
+        this.constrictionTarget = null;
+      }
+      return; // Lock normal movement during cinematic ingestion
+    }
+
+    // 2. Normal Locomotion & Steering
     if (input.left) {
       this.heading += this.turnSpeed * delta;
     }
@@ -295,44 +484,40 @@ class AnacondaSnake {
       this.heading -= this.turnSpeed * delta;
     }
 
-    // 2. Speed and Stamina Management
     let targetSpeed = 0;
     if (input.forward) {
       targetSpeed = this.baseSpeed;
       if (input.boost && this.stamina > 0) {
         targetSpeed *= this.boostMultiplier;
-        this.stamina = Math.max(0, this.stamina - 24 * delta);
+        this.stamina = Math.max(0, this.stamina - 22 * delta);
       } else {
-        this.stamina = Math.min(this.maxStamina, this.stamina + 10 * delta);
+        this.stamina = Math.min(this.maxStamina, this.stamina + 12 * delta);
       }
     } else if (input.backward) {
-      targetSpeed = -this.baseSpeed * 0.45;
+      targetSpeed = -this.baseSpeed * 0.4;
     } else {
-      this.stamina = Math.min(this.maxStamina, this.stamina + 15 * delta);
+      this.stamina = Math.min(this.maxStamina, this.stamina + 16 * delta);
     }
 
-    // Weight of digestion causes slight sluggishness
+    // Digestion weight drag
     if (this.digestingPrey.length > 0) {
-      targetSpeed *= 0.82;
+      targetSpeed *= 0.84;
     }
 
-    // Strike acceleration burst
+    // Strike Lunge Burst
     if (this.isStriking) {
       this.strikeTimer -= delta;
-      targetSpeed = this.baseSpeed * 2.8;
-      this.lowerJaw.rotation.x = 0.65; // Open wide for strike
+      targetSpeed = this.baseSpeed * 2.9;
+      this.lowerJawGroup.rotation.x = 0.75;
       if (this.strikeTimer <= 0) {
         this.isStriking = false;
-        this.lowerJaw.rotation.x = 0;
+        this.lowerJawGroup.rotation.x = 0;
       }
-    } else {
-      this.lowerJaw.rotation.x = Math.max(0, this.lowerJaw.rotation.x - delta * 3);
     }
 
-    // Smooth speed transition
-    this.speed = THREE.MathUtils.lerp(this.speed, targetSpeed, 6 * delta);
+    this.speed = THREE.MathUtils.lerp(this.speed, targetSpeed, 6.5 * delta);
 
-    // 3. Move Head Position
+    // 3. Move Head Vector
     const moveDist = this.speed * delta;
     const forwardVec = new THREE.Vector3(
       -Math.sin(this.heading),
@@ -342,34 +527,35 @@ class AnacondaSnake {
 
     this.position.addScaledVector(forwardVec, moveDist);
 
-    // Terrain Elevation / Water swimming check
+    // Terrain Elevation & Water Level
     const terrainHeight = world ? world.getHeightAt(this.position.x, this.position.z) : 0;
-    const waterLevel = 0.2;
+    const waterLevel = world ? world.waterLevel : 0.2;
+
     if (terrainHeight < waterLevel) {
       this.isUnderwater = true;
-      // Semi-submerged swimming
-      this.position.y = THREE.MathUtils.lerp(this.position.y, waterLevel - 0.05, 4 * delta);
+      // Semi-aquatic buoyancy
+      this.position.y = THREE.MathUtils.lerp(this.position.y, waterLevel - 0.04, 4 * delta);
     } else {
       this.isUnderwater = false;
-      this.position.y = THREE.MathUtils.lerp(this.position.y, terrainHeight + this.baseRadius * 0.4, 8 * delta);
+      this.position.y = THREE.MathUtils.lerp(this.position.y, terrainHeight + this.baseRadius * 0.45, 8 * delta);
     }
 
-    // Undulation wave phase
+    // Undulation phase
     if (Math.abs(this.speed) > 0.1) {
-      this.wavePhase += this.speed * delta * 4.5;
+      this.wavePhase += this.speed * delta * 4.8;
     }
 
-    // 4. Update Head Mesh Transform
+    // 4. Update Head Mesh
     this.headGroup.position.copy(this.position);
     this.headGroup.rotation.y = this.heading;
 
-    // Forked Tongue Flicking logic
+    // Tongue Flicking
     this.tongueFlickTimer += delta;
-    if (this.tongueFlickTimer > 3.2) {
-      const flickTime = this.tongueFlickTimer - 3.2;
+    if (this.tongueFlickTimer > 3.0) {
+      const flickTime = this.tongueFlickTimer - 3.0;
       if (flickTime < 0.6) {
-        const scale = Math.sin(flickTime / 0.6 * Math.PI);
-        this.tongueGroup.scale.set(scale, scale, scale);
+        const sc = Math.sin(flickTime / 0.6 * Math.PI);
+        this.tongueGroup.scale.set(sc, sc, sc);
       } else {
         this.tongueGroup.scale.set(0, 0, 0);
         this.tongueFlickTimer = 0;
@@ -379,23 +565,23 @@ class AnacondaSnake {
     // 5. Update Digestion Bulges along segments
     for (let p = this.digestingPrey.length - 1; p >= 0; p--) {
       const prey = this.digestingPrey[p];
-      prey.progress += prey.speed * delta * (Math.abs(this.speed) > 0.5 ? 1.4 : 0.6);
+      prey.progress += prey.speed * delta * (Math.abs(this.speed) > 0.5 ? 1.3 : 0.65);
       if (prey.progress >= this.numSegments) {
         this.digestingPrey.splice(p, 1);
       }
     }
 
-    // 6. Inverse Kinematics (Spine follow) & Bulge Deformation
+    // 6. Inverse Kinematics (Spine follow) with Lateral Wave
     let prevPos = this.position.clone();
+    const rightVec = new THREE.Vector3(-forwardVec.z, 0, forwardVec.x);
+
     for (let i = 0; i < this.numSegments; i++) {
       const seg = this.segments[i];
       const mesh = this.segmentMeshes[i];
 
       // Lateral serpentine wave displacement
-      const waveOffset = Math.sin(this.wavePhase - i * 0.38) * 0.22 * Math.min(1.0, Math.abs(this.speed) / 4.0);
-      const rightVec = new THREE.Vector3(-forwardVec.z, 0, forwardVec.x);
+      const waveOffset = Math.sin(this.wavePhase - i * 0.4) * 0.24 * Math.min(1.0, Math.abs(this.speed) / 4.0);
 
-      // Distance constraint to previous segment
       const dir = new THREE.Vector3().subVectors(seg.position, prevPos);
       const dist = dir.length();
       if (dist > 0.001) {
@@ -403,39 +589,35 @@ class AnacondaSnake {
         seg.position.copy(prevPos).addScaledVector(dir, this.segmentDistance);
       }
 
-      // Add undulating lateral sway
       seg.position.addScaledVector(rightVec, waveOffset * delta * 5.0);
 
-      // Terrain hugging
+      // Terrain Hugging
       const segGroundY = world ? world.getHeightAt(seg.position.x, seg.position.z) : 0;
-      const targetY = Math.max(segGroundY, waterLevel - 0.1) + seg.baseRadius * 0.35;
+      const targetY = Math.max(segGroundY, waterLevel - 0.1) + seg.baseRadius * 0.4;
       seg.position.y = THREE.MathUtils.lerp(seg.position.y, targetY, 10 * delta);
 
-      // Orientation tangent to next point
       mesh.position.copy(seg.position);
       mesh.lookAt(prevPos);
 
-      // Calculate Swallowing Bulge Expansion for segment i
+      // Anatomical Swallowing Bulge Scaling
       let bulgeScale = 1.0;
       for (const prey of this.digestingPrey) {
         const distFromBulge = Math.abs(prey.progress - i);
-        if (distFromBulge < 3.5) {
-          // Gaussian bell curve deformation
-          const bell = Math.exp(-(distFromBulge * distFromBulge) / 2.5);
-          bulgeScale += prey.size * bell * 1.35;
+        if (distFromBulge < 3.2) {
+          const bell = Math.exp(-(distFromBulge * distFromBulge) / 2.2);
+          bulgeScale += prey.size * bell * 1.45;
         }
       }
 
-      // Apply dynamic scale deformation
       mesh.scale.set(bulgeScale, bulgeScale * 0.85, bulgeScale * 1.15);
 
       prevPos = seg.position.clone();
     }
 
     // Hunger drain
-    this.hunger = Math.max(0, this.hunger - delta * 0.25);
+    this.hunger = Math.max(0, this.hunger - delta * 0.22);
     if (this.hunger <= 0) {
-      this.health = Math.max(0, this.health - delta * 1.8);
+      this.health = Math.max(0, this.health - delta * 2.0);
     }
   }
 
