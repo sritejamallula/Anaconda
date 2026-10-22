@@ -8,8 +8,16 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-brightgreen.svg)](#)
 
-> **A photorealistic 2D/2.5D wildlife survival game built in native Java Swing and Java2D.**
+> **A photorealistic wildlife survival game built in native Java Swing/Java2D and also available in 3D WebGL.**
 > Instead of an arcade snake, control a realistic green anaconda (*Eunectes murinus*) surviving, stalking prey, unhinging its jaws to swallow fauna, and swimming across Amazonian river islands to evolve from a 1.8-meter juvenile into a 14-meter Apex Titan.
+
+---
+
+## 🎮 Quick Play Links
+
+- 🌐 **[Play Online in Your Browser (GitHub Pages)](https://sritejamallula.github.io/Anaconda/)**
+- ☕ **[Download Desktop Standalone Game (Anaconda.jar)](https://github.com/sritejamallula/Anaconda/raw/main/Anaconda.jar)** *(Double-click or run `java -jar Anaconda.jar`)*
+- 📂 **[Browse GitHub Repository](https://github.com/sritejamallula/Anaconda)**
 
 ---
 
