@@ -84,17 +84,27 @@ class AnacondaGame {
     );
     this.camera.position.set(0, 8, 14);
 
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: this.canvas,
-      antialias: true,
-      powerPreference: 'high-performance'
-    });
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.22;
+    try {
+      this.renderer = new THREE.WebGLRenderer({
+        canvas: this.canvas,
+        antialias: true,
+        powerPreference: 'default'
+      });
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      this.renderer.shadowMap.enabled = true;
+      this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      this.renderer.toneMappingExposure = 1.22;
+    } catch (e) {
+      console.warn("WebGL initialization fallback:", e);
+      try {
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+      } catch (err2) {
+        console.error("Renderer fallback failure:", err2);
+      }
+    }
   }
 
   initInputs() {
@@ -400,12 +410,25 @@ class AnacondaGame {
   startGame(level = null) {
     this.hasUserStarted = true;
     const modal = document.getElementById('start-modal');
-    if (modal) modal.style.display = 'none';
-
-    this.audio.init();
-    if (level && level !== this.currentLevel) {
-      this.switchLevel(level);
+    if (modal) {
+      modal.style.display = 'none';
+      modal.style.pointerEvents = 'none';
     }
+
+    try {
+      if (this.audio) this.audio.init();
+    } catch (e) {
+      console.warn('Audio init deferred:', e);
+    }
+
+    if (level && level !== this.currentLevel) {
+      try {
+        this.switchLevel(level);
+      } catch (e) {
+        console.warn('Switch level error:', e);
+      }
+    }
+
     this.showToast('You are the Amazon Anaconda! Slither and hunt prey to survive and grow!', 'evolution');
   }
 
@@ -615,58 +638,84 @@ class AnacondaGame {
 
   animate() {
     requestAnimationFrame(() => this.animate());
-    const delta = Math.min(this.clock.getDelta(), 0.1);
+    try {
+      const delta = Math.min(this.clock.getDelta(), 0.1);
 
-    if (!this.snake || this.isPaused || this.isGameOver) {
-      this.renderer.render(this.scene, this.camera);
-      return;
-    }
-
-    if (this.currentLevel === 1 && this.snake.preyEaten >= 5) {
-      const headPos = this.snake.getHeadPosition();
-      if (headPos.z > 24 && Math.abs(headPos.x) < 7) {
-        this.switchLevel(2);
+      if (!this.snake || this.isPaused || this.isGameOver) {
+        if (this.renderer && this.scene && this.camera) {
+          this.renderer.render(this.scene, this.camera);
+        }
+        return;
       }
-    }
 
-    this.snake.update(delta, this.input, this.world);
-    this.world.update(delta);
-    this.fauna.update(
-      delta,
-      this.snake,
-      this.audio,
-      (killedPrey) => {
-        this.showToast('Swallowed ' + (killedPrey.name || 'Prey') + '! Digesting... (+' + (killedPrey.points || 50) + ' pts)', 'digestion');
-      },
-      (newStage) => {
-        this.triggerEvolutionBanner(newStage);
-      },
-      () => {
-        this.showToast('VICTORY! Prehistoric Black Caiman Defeated! You are the Apex Titan Ruler of the Amazon!', 'boss');
+      if (this.currentLevel === 1 && this.snake.preyEaten >= 5) {
+        const headPos = this.snake.getHeadPosition();
+        if (headPos.z > 24 && Math.abs(headPos.x) < 7) {
+          this.switchLevel(2);
+        }
       }
-    );
 
-    if (Math.abs(this.snake.speed) > 1.0) {
-      if (this.snake.isUnderwater) {
-        if (Math.random() < 0.08) this.audio.playSwim();
-      } else {
-        if (Math.random() < 0.06) this.audio.playSlither();
+      this.snake.update(delta, this.input, this.world);
+      this.world.update(delta);
+      this.fauna.update(
+        delta,
+        this.snake,
+        this.audio,
+        (killedPrey) => {
+          this.showToast('Swallowed ' + (killedPrey.name || 'Prey') + '! Digesting... (+' + (killedPrey.points || 50) + ' pts)', 'digestion');
+        },
+        (newStage) => {
+          this.triggerEvolutionBanner(newStage);
+        },
+        () => {
+          this.showToast('VICTORY! Prehistoric Black Caiman Defeated! You are the Apex Titan Ruler of the Amazon!', 'boss');
+        }
+      );
+
+      if (Math.abs(this.snake.speed) > 1.0 && this.audio) {
+        if (this.snake.isUnderwater) {
+          if (Math.random() < 0.08) this.audio.playSwim();
+        } else {
+          if (Math.random() < 0.06) this.audio.playSlither();
+        }
       }
-    }
 
-    if (this.snake.health <= 0 && !this.isGameOver) {
-      this.isGameOver = true;
-      this.audio.playHurt();
-      this.showToast('Game Over: Your Anaconda has starved or succumbed to injuries.', 'boss');
-    }
+      if (this.snake.health <= 0 && !this.isGameOver) {
+        this.isGameOver = true;
+        if (this.audio) this.audio.playHurt();
+        this.showToast('Game Over: Your Anaconda has starved or succumbed to injuries.', 'boss');
+      }
 
-    this.updateCamera(delta);
-    this.updateHUD();
-    this.radar.render(this.snake, this.fauna.entities, this.fauna.boss);
-    this.renderer.render(this.scene, this.camera);
+      this.updateCamera(delta);
+      this.updateHUD();
+      if (this.radar) {
+        this.radar.render(this.snake, this.fauna.entities, this.fauna.boss);
+      }
+      if (this.renderer && this.scene && this.camera) {
+        this.renderer.render(this.scene, this.camera);
+      }
+    } catch (e) {
+      console.warn('Frame animation tick error:', e);
+    }
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  window.gameInstance = new AnacondaGame();
-});
+function initGame() {
+  if (!window.gameInstance) {
+    try {
+      window.gameInstance = new AnacondaGame();
+    } catch (e) {
+      console.error('AnacondaGame initialization error:', e);
+    }
+  }
+  return window.gameInstance;
+}
+
+window.initGame = initGame;
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initGame);
+} else {
+  initGame();
+}
+window.addEventListener('load', initGame);

@@ -125,6 +125,8 @@
         <button id="btn-mobile-strike" class="mobile-btn">STRIKE</button>
         <button id="btn-mobile-thermal" class="mobile-btn">HEAT</button>
       </div>
+    </div>
+
     <!-- Desktop & Mobile In-Game Floating Action HUD -->
     <div id="action-hud" class="interactive">
       <button id="hud-steer-left" class="hud-action-btn" title="Steer Left (A / Left Arrow)">◀ STEER</button>
@@ -134,47 +136,52 @@
     </div>
   </div>
 
-  <!-- Start Game & Interactive Menu Modal -->
+  <!-- Start Game & Interactive Menu Modal (Discovery Channel & Nat Geo Style) -->
   <div id="start-modal" class="modal-overlay">
     <div class="modal-card">
-      <!-- Hero Python Image Banner -->
+      <!-- Hero Python Image Banner (Discovery Channel & National Geographic Photography) -->
       <div class="hero-python-card">
         <div class="hero-img-frame">
-          <img src="assets/art/anaconda_model.jpg" alt="Realistic Green Anaconda Python" class="hero-python-img" id="hero-python-img">
+          <img src="assets/art/python_forest_facing.jpg" alt="Giant Wild Python in Amazon Rainforest" class="hero-python-img" id="hero-python-img">
           <div class="hero-glow-border"></div>
+          <div class="hero-natgeo-tag">
+            <span>🟡 NATIONAL GEOGRAPHIC WILD &bull; DISCOVERY EXPEDITION</span>
+          </div>
           <div class="hero-caption">
-            <span class="species-title">🐍 EUNECTES MURINUS &bull; GREEN ANACONDA</span>
-            <span class="species-sub">Amazon River Apex Predator &bull; Photorealistic Survival Simulator</span>
+            <span class="species-title">EUNECTES MURINUS &bull; GREEN ANACONDA</span>
+            <span class="species-sub">Photorealistic wildlife capture &bull; Giant constrictor camouflaged in dense Amazon foliage facing forward</span>
           </div>
         </div>
       </div>
 
       <h1 class="modal-title">ANACONDA 3D SURVIVAL</h1>
-      <p class="modal-subtitle">Evolve from a 1.8m juvenile into a 14-meter Apex River Monarch</p>
+      <p class="modal-subtitle">Amazon River Apex Predator &bull; Discovery Channel Wildlife Expedition</p>
 
-      <!-- Interactive Level Selector -->
+      <!-- Interactive Expedition Level Selector -->
       <div class="level-select-row">
-        <button class="level-card active" data-level="1" id="lvl-card-1">
+        <button class="level-card active" data-level="1" id="lvl-card-1" onclick="window.launchGame(1)">
           <span class="lvl-badge">LEVEL 1</span>
           <span class="lvl-title">Nursery Shallows</span>
           <span class="lvl-desc">Hunt 5 Frogs & Insects</span>
         </button>
-        <button class="level-card" data-level="2" id="lvl-card-2">
+        <button class="level-card" data-level="2" id="lvl-card-2" onclick="window.launchGame(2)">
           <span class="lvl-badge">LEVEL 2</span>
           <span class="lvl-title">Tapajós Crossing</span>
           <span class="lvl-desc">Hunt Capybaras & Caimans</span>
         </button>
-        <button class="level-card" data-level="3" id="lvl-card-3">
+        <button class="level-card" data-level="3" id="lvl-card-3" onclick="window.launchGame(3)">
           <span class="lvl-badge">LEVEL 3</span>
           <span class="lvl-title">Blackwater Forest</span>
-          <span class="lvl-desc">Defeat Titan Caiman Boss</span>
+          <span class="lvl-desc">Apex Boss: Titan Caiman</span>
         </button>
       </div>
 
       <!-- Action Buttons -->
       <div class="menu-action-buttons">
-        <button id="start-btn" class="btn-start pulse-btn">▶ ENTER THE AMAZON &bull; PLAY GAME NOW</button>
-        <button id="btn-toggle-guide" class="btn-guide-toggle">📖 Controls & Guide</button>
+        <button id="start-btn" class="btn-start pulse-btn" onclick="window.launchGame(1)">
+          ▶ START EXPEDITION &bull; PLAY GAME NOW
+        </button>
+        <button id="btn-toggle-guide" class="btn-guide-toggle" type="button">📖 Controls & Guide</button>
       </div>
 
       <div id="guide-drawer" class="guide-grid" style="display:none;">
@@ -187,6 +194,26 @@
       </div>
     </div>
   </div>
+
+  <script>
+    // Fail-safe global game launcher (Runs instantly on user click with 0 ms delay)
+    window.launchGame = function(lvl) {
+      try {
+        var modal = document.getElementById('start-modal');
+        if (modal) modal.style.display = 'none';
+        if (window.gameInstance) {
+          window.gameInstance.startGame(lvl || 1);
+        } else if (window.initGame) {
+          window.initGame();
+          if (window.gameInstance) window.gameInstance.startGame(lvl || 1);
+        }
+      } catch (err) {
+        console.error("Game launch error:", err);
+        var m = document.getElementById('start-modal');
+        if (m) m.style.display = 'none';
+      }
+    };
+  </script>
 
   <!-- Engine Scripts -->
   <script src="libs/three.min.js"></script>

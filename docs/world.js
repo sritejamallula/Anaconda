@@ -429,9 +429,14 @@ class AmazonWorld {
   initAtmosphere() {
     // 1. PBR Environment Lighting (Amazon Equirectangular Sky)
     if (this.assets && this.assets.createEquirectangularSky) {
-      const { skyTex, envMap } = this.assets.createEquirectangularSky(this.renderer);
-      this.scene.background = skyTex;
-      this.scene.environment = envMap;
+      try {
+        const { skyTex, envMap } = this.assets.createEquirectangularSky(this.renderer);
+        if (skyTex) this.scene.background = skyTex;
+        if (envMap) this.scene.environment = envMap;
+      } catch (e) {
+        console.warn('Sky/Environment generation fallback:', e);
+        this.scene.background = new THREE.Color(0x0e2417);
+      }
     }
 
     // 2. Directional Golden Amazon Sunlight

@@ -10,34 +10,38 @@ class RadarHUD {
 
   resize() {
     if (!this.canvas) return;
-    const rect = this.canvas.parentElement.getBoundingClientRect();
-    this.canvas.width = rect.width * (window.devicePixelRatio || 1);
-    this.canvas.height = rect.height * (window.devicePixelRatio || 1);
+    const parent = this.canvas.parentElement;
+    const rect = parent ? parent.getBoundingClientRect() : null;
+    const w = (rect && rect.width > 20) ? rect.width : 160;
+    const h = (rect && rect.height > 20) ? rect.height : 160;
+    this.canvas.width = w * (window.devicePixelRatio || 1);
+    this.canvas.height = h * (window.devicePixelRatio || 1);
   }
 
   render(snake, entities, boss) {
     if (!this.ctx || !snake) return;
-    const ctx = this.ctx;
-    const width = this.canvas.width;
-    const height = this.canvas.height;
-    const center = width / 2;
-    const radius = center - 8;
+    try {
+      const ctx = this.ctx;
+      const width = Math.max(80, this.canvas.width || 160);
+      const height = Math.max(80, this.canvas.height || 160);
+      const center = width / 2;
+      const radius = Math.max(20, center - 8);
 
-    ctx.clearRect(0, 0, width, height);
+      ctx.clearRect(0, 0, width, height);
 
-    // Save state
-    ctx.save();
-    
-    // Circular clip
-    ctx.beginPath();
-    ctx.arc(center, center, radius, 0, Math.PI * 2);
-    ctx.clip();
+      // Save state
+      ctx.save();
+      
+      // Circular clip
+      ctx.beginPath();
+      ctx.arc(center, center, radius, 0, Math.PI * 2);
+      ctx.clip();
 
-    // Dark bio-holographic background
-    const bgGrad = ctx.createRadialGradient(center, center, 5, center, center, radius);
-    bgGrad.addColorStop(0, '#041c0f');
-    bgGrad.addColorStop(0.7, '#021208');
-    bgGrad.addColorStop(1, '#010804');
+      // Dark bio-holographic background
+      const bgGrad = ctx.createRadialGradient(center, center, Math.min(5, radius * 0.2), center, center, radius);
+      bgGrad.addColorStop(0, '#041c0f');
+      bgGrad.addColorStop(0.7, '#021208');
+      bgGrad.addColorStop(1, '#010804');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
@@ -210,9 +214,10 @@ class RadarHUD {
       ctx.fill();
     }
 
-    ctx.restore();
-
     ctx.restore(); // Restore clip
+    } catch (err) {
+      console.warn('RadarHUD error:', err);
+    }
   }
 }
 
