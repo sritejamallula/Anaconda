@@ -48,17 +48,25 @@ class AnacondaGame {
     this.animate();
 
     // 4. Background HD Asset Ingestion
+    const startBtn = document.getElementById('start-btn');
+    if (startBtn) {
+      startBtn.disabled = false;
+      startBtn.textContent = 'ENTER THE AMAZON (3D)';
+    }
+
     this.assets.loadAll(
       (progress) => {
-        const startBtn = document.getElementById('start-btn');
-        if (startBtn && !this.hasUserStarted) {
-          startBtn.textContent = ENTER THE AMAZON (3D %);
+        const btn = document.getElementById('start-btn');
+        if (btn && !this.hasUserStarted) {
+          btn.disabled = false;
+          btn.textContent = `ENTER THE AMAZON (${Math.round(progress * 100)}%)`;
         }
       },
       () => {
-        const startBtn = document.getElementById('start-btn');
-        if (startBtn && !this.hasUserStarted) {
-          startBtn.textContent = 'ENTER THE AMAZON (3D)';
+        const btn = document.getElementById('start-btn');
+        if (btn && !this.hasUserStarted) {
+          btn.disabled = false;
+          btn.textContent = 'ENTER THE AMAZON (3D)';
         }
       }
     );
@@ -240,9 +248,9 @@ class AnacondaGame {
           const dist = Math.hypot(dx, dy);
           const maxR = 40;
           const clampedDist = Math.min(dist, maxR);
-          const angle = Math.atan2(dy, dx);
-
-          joyThumb.style.transform = 	ranslate(px, px);
+          const tx = Math.cos(angle) * clampedDist;
+          const ty = Math.sin(angle) * clampedDist;
+          joyThumb.style.transform = `translate(${tx}px, ${ty}px)`;
 
           this.input.forward = dy < -10;
           this.input.backward = dy > 15;
@@ -350,7 +358,7 @@ class AnacondaGame {
       'Level 2: The Great Tapajós Crossing',
       'Level 3: Flooded Blackwater Forest (Boss Arena)'
     ];
-    this.showToast(ENTERING: , 'evolution');
+    this.showToast('ENTERING: ' + names[lvl - 1], 'evolution');
 
     const lvlNameEl = document.getElementById('level-name-val');
     if (lvlNameEl) lvlNameEl.textContent = names[lvl - 1];
@@ -400,7 +408,7 @@ class AnacondaGame {
   cycleCamera() {
     this.cameraMode = (this.cameraMode + 1) % 3;
     const modes = ['360° Follow Orbit', 'Wide Panoramic', '1st-Person Head'];
-    this.showToast(Camera View: );
+    this.showToast('Camera View: ' + modes[this.cameraMode]);
   }
 
   togglePause() {
@@ -413,8 +421,7 @@ class AnacondaGame {
     if (!panel) return;
 
     const toast = document.createElement('div');
-    toast.className = 
-otification-toast toast-;
+    toast.className = 'notification-toast toast-' + type;
     toast.textContent = msg;
     panel.appendChild(toast);
 
@@ -429,13 +436,13 @@ otification-toast toast-;
     if (!this.snake) return;
 
     const healthFill = document.getElementById('health-fill');
-    if (healthFill) healthFill.style.width = ${Math.max(0, this.snake.health)}%;
+    if (healthFill) healthFill.style.width = Math.max(0, this.snake.health) + '%';
 
     const staminaFill = document.getElementById('stamina-fill');
-    if (staminaFill) staminaFill.style.width = ${Math.max(0, this.snake.stamina)}%;
+    if (staminaFill) staminaFill.style.width = Math.max(0, this.snake.stamina) + '%';
 
     const hungerFill = document.getElementById('hunger-fill');
-    if (hungerFill) hungerFill.style.width = ${Math.max(0, this.snake.hunger)}%;
+    if (hungerFill) hungerFill.style.width = Math.max(0, this.snake.hunger) + '%';
 
     const scoreVal = document.getElementById('score-val');
     if (scoreVal) scoreVal.textContent = this.snake.score;
@@ -445,7 +452,7 @@ otification-toast toast-;
       const count = this.snake.numSpinePoints || 28;
       const dist = this.snake.spineDistance || 0.52;
       const lengthMeters = (count * dist).toFixed(1);
-      lengthVal.textContent = ${lengthMeters}m;
+      lengthVal.textContent = lengthMeters + 'm';
     }
 
     const stageNames = ['Juvenile', 'Sub-Adult', 'Adult Predator', 'Apex Titan'];
@@ -453,7 +460,7 @@ otification-toast toast-;
     if (apexVal) apexVal.textContent = stageNames[this.snake.growthStage - 1];
 
     const preyCountVal = document.getElementById('prey-count-val');
-    if (preyCountVal) preyCountVal.textContent = ${this.snake.preyEaten} (Goal: 5 to evolve);
+    if (preyCountVal) preyCountVal.textContent = this.snake.preyEaten + ' (Goal: 5 to evolve)';
 
     const bossPanel = document.getElementById('boss-bar-panel');
     const bossFill = document.getElementById('boss-health-fill');
@@ -462,7 +469,7 @@ otification-toast toast-;
       if (distToBoss < 50) {
         bossPanel.style.display = 'block';
         const pct = (this.fauna.boss.health / this.fauna.boss.maxHealth) * 100;
-        bossFill.style.width = ${pct}%;
+        bossFill.style.width = pct + '%';
       } else {
         bossPanel.style.display = 'none';
       }
@@ -562,7 +569,7 @@ otification-toast toast-;
       this.snake,
       this.audio,
       (killedPrey) => {
-        this.showToast(Swallowed ! Digesting... (+ pts), 'digestion');
+        this.showToast('Swallowed ' + (killedPrey.name || 'Prey') + '! Digesting... (+' + (killedPrey.points || 50) + ' pts)', 'digestion');
       },
       (newStage) => {
         this.triggerEvolutionBanner(newStage);

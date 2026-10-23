@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Anaconda: Amazon River Apex 3D - Photorealistic Survival</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 3D WebGL Canvas Container -->
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
+  </div>
+
+  <!-- Thermal Vision CRT Scanline Screen Overlay -->
+  <div id="thermal-overlay">
+    <div class="thermal-scanlines"></div>
+  </div>
+
+  <!-- Fullscreen Dynamic Evolution Banner -->
+  <div id="evolution-banner">
+    <div class="evolution-heading">METAMORPHOSIS & EVOLUTION</div>
+    <div class="evolution-title">Sub-Adult Evolution: Girth & Length Expanded!</div>
+    <div class="evolution-desc">You are now large enough to navigate deep water channels and hunt mammals!</div>
+  </div>
+
+  <!-- In-Game UI Layer -->
+  <div id="ui-overlay">
+    <!-- Top HUD Bar -->
+    <div class="top-bar">
+      <!-- Player Stats & Growth Progression -->
+      <div class="stats-panel interactive">
+        <div class="current-level-badge">
+          <span id="level-name-val">Level 1: The Shallows (Nursery Mudbank)</span>
+          <span id="growth-stage-badge">STAGE 1</span>
+        </div>
+
+        <div class="stat-row">
+          <span>Health</span>
+          <div class="bar-container">
+            <div id="health-fill" class="bar-fill"></div>
+          </div>
+        </div>
+        <div class="stat-row">
+          <span>Stamina</span>
+          <div class="bar-container">
+            <div id="stamina-fill" class="bar-fill"></div>
+          </div>
+        </div>
+        <div class="stat-row">
+          <span>Satiety</span>
+          <div class="bar-container">
+            <div id="hunger-fill" class="bar-fill"></div>
+          </div>
+        </div>
+
+        <div class="info-display">
+          <div class="info-item">SCORE: <span id="score-val">0</span></div>
+          <div class="info-item">LENGTH: <span id="length-val">1.8m</span></div>
+          <div class="info-item">GROWTH: <span id="apex-val">Juvenile</span></div>
+          <div class="info-item">PREY: <span id="prey-count-val">0 (5 to evolve)</span></div>
+        </div>
+      </div>
+
+      <!-- Quick Action Controls -->
+      <div class="controls-panel interactive">
+        <button id="btn-next-level" class="hud-btn" style="display:none;" title="Advance to Next Amazon Level">ADVANCE LEVEL &rarr;</button>
+        <button id="btn-thermal" class="hud-btn" title="Toggle Thermal Pit Vision (T)">[T] THERMAL</button>
+        <button id="btn-camera" class="hud-btn" title="Cycle Camera Views (C)">[C] CAMERA</button>
+        <button id="btn-audio" class="hud-btn active" title="Mute Audio (M)">[M] AUDIO</button>
+      </div>
+    </div>
+
+    <!-- Center Reticle / Strike Crosshair -->
+    <div id="crosshair">
+      <div class="crosshair-circle"></div>
+    </div>
+
+    <!-- Boss Encounter Health Bar -->
+    <div id="boss-bar-panel">
+      <div class="boss-title">
+        <span>Titan Black Caiman (Prehistoric Apex Boss)</span>
+        <span id="boss-hp-text">500 / 500</span>
+      </div>
+      <div class="boss-bar-track">
+        <div id="boss-health-fill"></div>
+      </div>
+    </div>
+
+    <!-- Bottom Notification Toast Stream -->
+    <div id="notification-panel"></div>
+
+    <!-- Tactical Radar HUD (Bottom Right) with Photorealistic Ancient Wood-Vine Frame -->
+    <div class="radar-panel interactive">
+      <img src="assets/art/tactical_hud.jpg" class="radar-photo-frame" alt="HUD Frame">
+      <canvas id="radar-canvas"></canvas>
+      <div class="radar-border-ring"></div>
+      <div class="radar-label">BIO-RADAR</div>
+    </div>
+
+    <!-- Mobile Virtual Controls -->
+    <div id="mobile-controls">
+      <div id="joystick-base" class="joystick-base">
+        <div id="joystick-thumb" class="joystick-thumb"></div>
+      </div>
+      <div class="mobile-actions">
+        <button id="btn-mobile-strike" class="mobile-btn">STRIKE</button>
+        <button id="btn-mobile-thermal" class="mobile-btn">HEAT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Start Game & Tutorial Modal -->
+  <div id="start-modal" class="modal-overlay">
+    <div class="modal-card">
+      <h1 class="modal-title">ANACONDA 3D</h1>
+      <p class="modal-subtitle">Amazon River Apex Predator &bull; Photorealistic Survival Simulator</p>
+
+      <div class="guide-grid">
+        <div class="guide-item"><kbd>W</kbd> <kbd>S</kbd> / <kbd>&uarr;</kbd> <kbd>&darr;</kbd> Slither / Swim (Forward & Backward)</div>
+        <div class="guide-item"><kbd>A</kbd> <kbd>D</kbd> / <kbd>&larr;</kbd> <kbd>&rarr;</kbd> Steer Heading Left & Right</div>
+        <div class="guide-item"><kbd>SPACE</kbd> / <kbd>L-Click</kbd> Strike & Constrict Prey</div>
+        <div class="guide-item"><kbd>SHIFT</kbd> Sprint Burst (Uses Stamina)</div>
+        <div class="guide-item"><kbd>T</kbd> Thermal Pit Vision (Detect Warm Heat Signatures)</div>
+        <div class="guide-item"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> Jump Directly to Levels 1, 2, or 3</div>
+      </div>
+
+      <p style="font-size:12px; color:#85c29d; margin-bottom: 20px;">
+        <strong>Life-Cycle Objective:</strong> Start as a small 1.8m juvenile in the enclosed nursery shallows. Hunt 5 insects or small tree frogs to trigger your first growth evolution, expand your length and girth, and unlock the passage to the vast Tapajós River Crossing!
+      </p>
+
+      <button id="start-btn" class="btn-start">ENTER THE AMAZON &bull; PLAY GAME NOW</button>
+    </div>
+  </div>
+
+  <!-- Engine Scripts -->
+  <script src="libs/three.min.js"></script>
+  <script src="assets.js"></script>
+  <script src="audio.js"></script>
+  <script src="radar.js"></script>
+  <script src="snake.js"></script>
+  <script src="world.js"></script>
+  <script src="entities.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
