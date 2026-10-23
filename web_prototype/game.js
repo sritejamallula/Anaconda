@@ -178,21 +178,21 @@ class AnacondaGame {
       }
     });
 
-    // 360° Mouse Orbit & Zoom Controls
+    // Mouse & Pointer Interactions
     window.addEventListener('mousedown', (e) => {
       if (e.target.closest('.interactive') || e.target.closest('#start-modal')) return;
 
       if (e.button === 0) {
-        // Left Click: Drag to orbit camera in 3D
-        this.isDragging = true;
-        this.dragStart.x = e.clientX;
-        this.dragStart.y = e.clientY;
-      } else if (e.button === 2) {
-        // Right Click: Strike
+        // Left Click: Predatory Strike & Lunge!
         if (this.snake) {
           this.snake.triggerStrike();
           this.audio.playStrike();
         }
+      } else if (e.button === 2) {
+        // Right Click: 3D Orbit Drag
+        this.isDragging = true;
+        this.dragStart.x = e.clientX;
+        this.dragStart.y = e.clientY;
       }
     });
 
@@ -205,6 +205,20 @@ class AnacondaGame {
 
         this.orbitYaw -= dx * 0.0075;
         this.orbitPitch = Math.max(0.06, Math.min(1.42, this.orbitPitch + dy * 0.0075));
+      } else if (this.hasUserStarted && !this.isPaused && !this.isGameOver) {
+        if (!e.target.closest('.interactive')) {
+          const ratio = (e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
+          if (ratio < -0.22) {
+            this.input.left = true;
+            this.input.right = false;
+          } else if (ratio > 0.22) {
+            this.input.right = true;
+            this.input.left = false;
+          } else {
+            this.input.left = false;
+            this.input.right = false;
+          }
+        }
       }
     });
 
@@ -324,6 +338,57 @@ class AnacondaGame {
       startBtn.addEventListener('click', () => this.startGame());
     }
 
+    // Interactive Level Select Cards
+    const levelCards = document.querySelectorAll('.level-card');
+    levelCards.forEach((card) => {
+      card.addEventListener('click', () => {
+        const lvl = parseInt(card.getAttribute('data-level'), 10) || 1;
+        levelCards.forEach((c) => c.classList.remove('active'));
+        card.classList.add('active');
+        this.startGame(lvl);
+      });
+    });
+
+    // Toggle Controls Guide Drawer
+    const guideBtn = document.getElementById('btn-toggle-guide');
+    const guideDrawer = document.getElementById('guide-drawer');
+    if (guideBtn && guideDrawer) {
+      guideBtn.addEventListener('click', () => {
+        const isHidden = guideDrawer.style.display === 'none';
+        guideDrawer.style.display = isHidden ? 'grid' : 'none';
+        guideBtn.textContent = isHidden ? '📖 Hide Controls' : '📖 Controls & Guide';
+      });
+    }
+
+    // In-Game Floating Action HUD Buttons
+    const steerLeftBtn = document.getElementById('hud-steer-left');
+    const steerRightBtn = document.getElementById('hud-steer-right');
+    const strikeBtn = document.getElementById('hud-strike');
+    const boostBtn = document.getElementById('hud-boost');
+
+    const bindButton = (el, onDown, onUp) => {
+      if (!el) return;
+      el.addEventListener('mousedown', (e) => { e.preventDefault(); onDown(); });
+      el.addEventListener('mouseup', (e) => { e.preventDefault(); onUp(); });
+      el.addEventListener('mouseleave', (e) => { e.preventDefault(); onUp(); });
+      el.addEventListener('touchstart', (e) => { e.preventDefault(); onDown(); }, { passive: false });
+      el.addEventListener('touchend', (e) => { e.preventDefault(); onUp(); }, { passive: false });
+    };
+
+    bindButton(steerLeftBtn, () => { this.input.left = true; }, () => { this.input.left = false; });
+    bindButton(steerRightBtn, () => { this.input.right = true; }, () => { this.input.right = false; });
+    bindButton(boostBtn, () => { this.input.boost = true; }, () => { this.input.boost = false; });
+
+    if (strikeBtn) {
+      strikeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (this.snake) {
+          this.snake.triggerStrike();
+          this.audio.playStrike();
+        }
+      });
+    }
+
     const startModal = document.getElementById('start-modal');
     if (startModal) {
       startModal.addEventListener('click', (e) => {
@@ -332,14 +397,16 @@ class AnacondaGame {
     }
   }
 
-  startGame() {
+  startGame(level = null) {
     this.hasUserStarted = true;
     const modal = document.getElementById('start-modal');
     if (modal) modal.style.display = 'none';
 
     this.audio.init();
-    this.input.forward = true;
-    this.showToast('You are a juvenile Anaconda. Hunt 5 insects/frogs to grow and unlock Level 2!');
+    if (level && level !== this.currentLevel) {
+      this.switchLevel(level);
+    }
+    this.showToast('You are the Amazon Anaconda! Slither and hunt prey to survive and grow!', 'evolution');
   }
 
   switchLevel(lvl) {

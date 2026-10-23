@@ -1,23 +1,23 @@
-# 🐍 Realistic Anaconda: Amazon Rainforest Survival
+# 🐍 Anaconda 3D: Amazon River Apex Predator
 
 ![Anaconda Banner](assets/art/anaconda_model.jpg)
 
-[![Java](https://img.shields.io/badge/Java-17%2B%20%7C%2025%20LTS-orange.svg)](https://www.oracle.com/java/)
-[![GUI](https://img.shields.io/badge/UI-Java%20Swing%20%26%20Java2D-blue.svg)](#)
-[![Audio](https://img.shields.io/badge/Audio-Java%20Sound%20API-green.svg)](#)
+[![WebGL 3D](https://img.shields.io/badge/WebGL-True%203D%20Engine-brightgreen.svg)](https://sritejamallula.github.io/Anaconda/)
+[![Three.js](https://img.shields.io/badge/Three.js-r128%20PBR%20Liquid%20Clearcoat-blue.svg)](https://threejs.org/)
+[![Play Live](https://img.shields.io/badge/PLAY%203D%20LIVE-Click%20Here-success.svg?style=for-the-badge)](https://sritejamallula.github.io/Anaconda/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-brightgreen.svg)](#)
+[![Platform](https://img.shields.io/badge/Platform-Web%20Browser%20%7C%20Desktop%20%7C%20Mobile-brightgreen.svg)](#)
 
-> **A photorealistic wildlife survival game built in native Java Swing/Java2D and also available in 3D WebGL.**
-> Instead of an arcade snake, control a realistic green anaconda (*Eunectes murinus*) surviving, stalking prey, unhinging its jaws to swallow fauna, and swimming across Amazonian river islands to evolve from a 1.8-meter juvenile into a 14-meter Apex Titan.
+> **An authentic, photorealistic 3D survival simulator built in Three.js WebGL.**
+> Control a true 3D green anaconda (*Eunectes murinus*) with a mathematically continuous spline-lofted body, wet specular clearcoat scales, 360° free camera orbit, and unhinging 3D jaws. Stalk 3D prey fauna, constrict, swallow with a traveling food bulge, and cross Amazonian river channels to evolve from a 1.8m juvenile into a 14m Apex River Titan!
 
 ---
 
-## 🎮 Quick Play Links
+## 🎮 Play Live in 1-Click
 
-- 🌐 **[Play Online in Your Browser (GitHub Pages)](https://sritejamallula.github.io/Anaconda/)**
-- ☕ **[Download Desktop Standalone Game (Anaconda.jar)](https://github.com/sritejamallula/Anaconda/raw/main/Anaconda.jar)** *(Double-click or run `java -jar Anaconda.jar`)*
-- 📂 **[Browse GitHub Repository](https://github.com/sritejamallula/Anaconda)**
+- 🌐 **[Play Online 3D Game (GitHub Pages)](https://sritejamallula.github.io/Anaconda/)** *(Runs instantly in any modern browser — no installation required!)*
+- 🌐 **[Mirror Play Link](https://vishnuvamsi123.github.io/anaconda-amazon-survival/)**
+- 📂 **[GitHub Repository](https://github.com/sritejamallula/Anaconda)**
 
 ---
 

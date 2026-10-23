@@ -385,19 +385,19 @@ class AnacondaSnake {
       this.heading -= this.turnSpeed * delta;
     }
 
-    let targetSpeed = 0;
-    if (input.forward) {
-      targetSpeed = this.baseSpeed;
-      if (input.boost && this.stamina > 0) {
-        targetSpeed *= this.boostMultiplier;
-        this.stamina = Math.max(0, this.stamina - 22 * delta);
-      } else {
-        this.stamina = Math.min(this.maxStamina, this.stamina + 12 * delta);
-      }
+    // Continuous natural forward slithering (Snake never freezes or stops unexpectedly)
+    let targetSpeed = this.baseSpeed;
+    if (input.boost && this.stamina > 0) {
+      targetSpeed = this.baseSpeed * this.boostMultiplier;
+      this.stamina = Math.max(0, this.stamina - 22 * delta);
+    } else if (input.forward) {
+      targetSpeed = this.baseSpeed * 1.35;
+      this.stamina = Math.min(this.maxStamina, this.stamina + 8 * delta);
     } else if (input.backward) {
-      targetSpeed = -this.baseSpeed * 0.4;
+      targetSpeed = this.baseSpeed * 0.35; // Cautious stalking slow-down
+      this.stamina = Math.min(this.maxStamina, this.stamina + 20 * delta);
     } else {
-      this.stamina = Math.min(this.maxStamina, this.stamina + 16 * delta);
+      this.stamina = Math.min(this.maxStamina, this.stamina + 14 * delta);
     }
 
     if (this.digestingPrey.length > 0) {

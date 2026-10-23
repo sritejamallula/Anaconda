@@ -625,3 +625,239 @@ html, body {
     right: 15px;
   }
 }
+
+/* ==========================================================================
+   Hero Python Image Banner & Interactive Game UI Overhaul
+   ========================================================================== */
+
+/* Hero Python Image Card */
+.hero-python-card {
+  width: 100%;
+  margin-bottom: 16px;
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.85), 0 0 25px rgba(0, 230, 118, 0.35);
+  border: 2px solid rgba(85, 255, 153, 0.5);
+  background: #020b06;
+}
+
+.hero-img-frame {
+  position: relative;
+  width: 100%;
+  height: 210px;
+  overflow: hidden;
+  background: #041009;
+}
+
+.hero-python-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.hero-python-card:hover .hero-python-img {
+  transform: scale(1.05);
+}
+
+.hero-glow-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  box-shadow: inset 0 0 20px rgba(0, 230, 118, 0.4);
+  pointer-events: none;
+}
+
+.hero-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 16px;
+  background: linear-gradient(0deg, rgba(2, 15, 8, 0.95) 0%, rgba(2, 15, 8, 0.65) 75%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.species-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #55ff99;
+  text-shadow: 0 0 8px rgba(85, 255, 153, 0.5);
+}
+
+.species-sub {
+  font-size: 11px;
+  color: #a8dfbc;
+  margin-top: 2px;
+}
+
+/* Python HUD Avatar */
+.hud-header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(50, 190, 110, 0.25);
+  padding-bottom: 6px;
+}
+
+.python-hud-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #55ff99;
+  box-shadow: 0 0 12px rgba(85, 255, 153, 0.45);
+}
+
+/* Interactive Level Select Row */
+.level-select-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.level-card {
+  background: rgba(8, 28, 16, 0.75);
+  border: 1.5px solid rgba(50, 160, 95, 0.4);
+  border-radius: 10px;
+  padding: 10px 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.25s ease;
+  color: #e2f4e8;
+}
+
+.level-card:hover {
+  background: rgba(14, 48, 28, 0.92);
+  border-color: #55ff99;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 230, 118, 0.3);
+}
+
+.level-card.active {
+  background: rgba(18, 62, 36, 0.95);
+  border-color: #00e676;
+  box-shadow: 0 0 18px rgba(0, 230, 118, 0.5);
+}
+
+.lvl-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #00e676;
+  background: rgba(0, 230, 118, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.lvl-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.lvl-desc {
+  font-size: 10px;
+  color: #85c29d;
+  text-align: center;
+}
+
+/* Action Buttons & Pulse */
+.menu-action-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.pulse-btn {
+  animation: pulseGlow 1.8s infinite;
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 15px rgba(0, 230, 118, 0.4); transform: scale(1); }
+  50% { box-shadow: 0 0 30px rgba(0, 230, 118, 0.85); transform: scale(1.02); }
+  100% { box-shadow: 0 0 15px rgba(0, 230, 118, 0.4); transform: scale(1); }
+}
+
+.btn-guide-toggle {
+  background: rgba(14, 40, 24, 0.85);
+  border: 1px solid rgba(85, 255, 153, 0.35);
+  color: #a8dfbc;
+  padding: 12px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.btn-guide-toggle:hover {
+  background: rgba(22, 65, 38, 0.95);
+  color: #55ff99;
+  border-color: #55ff99;
+}
+
+/* In-Game Floating Action HUD */
+#action-hud {
+  position: absolute;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.hud-action-btn {
+  background: rgba(6, 22, 13, 0.88);
+  border: 1.5px solid rgba(50, 190, 100, 0.45);
+  color: #55ff99;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 12px 18px;
+  border-radius: 30px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  transition: all 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hud-action-btn:hover, .hud-action-btn:active {
+  background: rgba(18, 65, 36, 0.95);
+  border-color: #00e676;
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(0, 230, 118, 0.5);
+}
+
+.hud-action-btn.strike-btn {
+  background: linear-gradient(135deg, #1b5e20, #00c853);
+  color: #041209;
+  border-color: #69f0ae;
+}
+
+.hud-action-btn.boost-btn {
+  background: linear-gradient(135deg, #e65100, #ff9100);
+  color: #1a0800;
+  border-color: #ffd180;
+}
+

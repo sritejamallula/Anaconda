@@ -28,11 +28,14 @@
   <div id="ui-overlay">
     <!-- Top HUD Bar -->
     <div class="top-bar">
-      <!-- Player Stats & Growth Progression -->
+      <!-- Player Stats & Growth Progression with Python Avatar -->
       <div class="stats-panel interactive">
-        <div class="current-level-badge">
-          <span id="level-name-val">Level 1: The Shallows (Nursery Mudbank)</span>
-          <span id="growth-stage-badge">STAGE 1</span>
+        <div class="hud-header-row">
+          <img src="assets/art/anaconda_model.jpg" class="python-hud-avatar" alt="Python / Anaconda">
+          <div class="current-level-badge">
+            <span id="level-name-val">Level 1: The Shallows (Nursery Mudbank)</span>
+            <span id="growth-stage-badge">STAGE 1 &bull; JUVENILE</span>
+          </div>
         </div>
 
         <div class="stat-row">
@@ -87,6 +90,21 @@
       </div>
     </div>
 
+    <!-- Persistent Bottom 3D Controls Hint Badge -->
+    <div class="controls-hint-badge">
+      <span>🖱️ <b>Drag Mouse:</b> 360° 3D Orbit</span>
+      <span class="dot">•</span>
+      <span>📜 <b>Wheel:</b> Zoom 3D</span>
+      <span class="dot">•</span>
+      <span>⌨️ <b>W/S:</b> Slither &amp; Swim</span>
+      <span class="dot">•</span>
+      <span>⌨️ <b>A/D:</b> Steer</span>
+      <span class="dot">•</span>
+      <span>⚡ <b>SPACE:</b> Strike &amp; Swallow</span>
+      <span class="dot">•</span>
+      <span>🌡️ <b>T:</b> Heat Vision</span>
+    </div>
+
     <!-- Bottom Notification Toast Stream -->
     <div id="notification-panel"></div>
 
@@ -107,29 +125,66 @@
         <button id="btn-mobile-strike" class="mobile-btn">STRIKE</button>
         <button id="btn-mobile-thermal" class="mobile-btn">HEAT</button>
       </div>
+    <!-- Desktop & Mobile In-Game Floating Action HUD -->
+    <div id="action-hud" class="interactive">
+      <button id="hud-steer-left" class="hud-action-btn" title="Steer Left (A / Left Arrow)">◀ STEER</button>
+      <button id="hud-strike" class="hud-action-btn strike-btn" title="Strike Prey (Space / Click)">🎯 STRIKE</button>
+      <button id="hud-boost" class="hud-action-btn boost-btn" title="Sprint Boost (Shift / W)">⚡ BOOST</button>
+      <button id="hud-steer-right" class="hud-action-btn" title="Steer Right (D / Right Arrow)">STEER ▶</button>
     </div>
   </div>
 
-  <!-- Start Game & Tutorial Modal -->
+  <!-- Start Game & Interactive Menu Modal -->
   <div id="start-modal" class="modal-overlay">
     <div class="modal-card">
-      <h1 class="modal-title">ANACONDA 3D</h1>
-      <p class="modal-subtitle">Amazon River Apex Predator &bull; Photorealistic Survival Simulator</p>
+      <!-- Hero Python Image Banner -->
+      <div class="hero-python-card">
+        <div class="hero-img-frame">
+          <img src="assets/art/anaconda_model.jpg" alt="Realistic Green Anaconda Python" class="hero-python-img" id="hero-python-img">
+          <div class="hero-glow-border"></div>
+          <div class="hero-caption">
+            <span class="species-title">🐍 EUNECTES MURINUS &bull; GREEN ANACONDA</span>
+            <span class="species-sub">Amazon River Apex Predator &bull; Photorealistic Survival Simulator</span>
+          </div>
+        </div>
+      </div>
 
-      <div class="guide-grid">
-        <div class="guide-item"><kbd>W</kbd> <kbd>S</kbd> / <kbd>&uarr;</kbd> <kbd>&darr;</kbd> Slither / Swim (Forward & Backward)</div>
+      <h1 class="modal-title">ANACONDA 3D SURVIVAL</h1>
+      <p class="modal-subtitle">Evolve from a 1.8m juvenile into a 14-meter Apex River Monarch</p>
+
+      <!-- Interactive Level Selector -->
+      <div class="level-select-row">
+        <button class="level-card active" data-level="1" id="lvl-card-1">
+          <span class="lvl-badge">LEVEL 1</span>
+          <span class="lvl-title">Nursery Shallows</span>
+          <span class="lvl-desc">Hunt 5 Frogs & Insects</span>
+        </button>
+        <button class="level-card" data-level="2" id="lvl-card-2">
+          <span class="lvl-badge">LEVEL 2</span>
+          <span class="lvl-title">Tapajós Crossing</span>
+          <span class="lvl-desc">Hunt Capybaras & Caimans</span>
+        </button>
+        <button class="level-card" data-level="3" id="lvl-card-3">
+          <span class="lvl-badge">LEVEL 3</span>
+          <span class="lvl-title">Blackwater Forest</span>
+          <span class="lvl-desc">Defeat Titan Caiman Boss</span>
+        </button>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="menu-action-buttons">
+        <button id="start-btn" class="btn-start pulse-btn">▶ ENTER THE AMAZON &bull; PLAY GAME NOW</button>
+        <button id="btn-toggle-guide" class="btn-guide-toggle">📖 Controls & Guide</button>
+      </div>
+
+      <div id="guide-drawer" class="guide-grid" style="display:none;">
+        <div class="guide-item"><kbd>W</kbd> <kbd>S</kbd> / <kbd>&uarr;</kbd> <kbd>&darr;</kbd> Sprint / Stalking Slowdown</div>
         <div class="guide-item"><kbd>A</kbd> <kbd>D</kbd> / <kbd>&larr;</kbd> <kbd>&rarr;</kbd> Steer Heading Left & Right</div>
         <div class="guide-item"><kbd>SPACE</kbd> / <kbd>L-Click</kbd> Strike & Constrict Prey</div>
         <div class="guide-item"><kbd>SHIFT</kbd> Sprint Burst (Uses Stamina)</div>
-        <div class="guide-item"><kbd>T</kbd> Thermal Pit Vision (Detect Warm Heat Signatures)</div>
-        <div class="guide-item"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> Jump Directly to Levels 1, 2, or 3</div>
+        <div class="guide-item"><kbd>T</kbd> Thermal Pit Vision (Detect Heat Signatures)</div>
+        <div class="guide-item"><kbd>Mouse Move</kbd> Natural Pointer Steering</div>
       </div>
-
-      <p style="font-size:12px; color:#85c29d; margin-bottom: 20px;">
-        <strong>Life-Cycle Objective:</strong> Start as a small 1.8m juvenile in the enclosed nursery shallows. Hunt 5 insects or small tree frogs to trigger your first growth evolution, expand your length and girth, and unlock the passage to the vast Tapajós River Crossing!
-      </p>
-
-      <button id="start-btn" class="btn-start">ENTER THE AMAZON &bull; PLAY GAME NOW</button>
     </div>
   </div>
 
