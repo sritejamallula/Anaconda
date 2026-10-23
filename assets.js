@@ -27,58 +27,103 @@ class GameAssets {
     canvas.height = 1024;
     const ctx = canvas.getContext('2d');
 
-    // Deep iridescent olive green base
-    const grad = ctx.createLinearGradient(0, 0, 1024, 1024);
-    grad.addColorStop(0, '#354d24');
-    grad.addColorStop(0.5, '#476831');
-    grad.addColorStop(1, '#2f421f');
+    // 1. Natural dorsal olive-drab to khaki-green gradient
+    const grad = ctx.createLinearGradient(0, 0, 1024, 0);
+    grad.addColorStop(0, '#364923');      // Dorsal spine (top)
+    grad.addColorStop(0.22, '#48632e');   // Upper lateral flank
+    grad.addColorStop(0.38, '#627a3c');   // Lower lateral flank
+    grad.addColorStop(0.44, '#ded7a4');   // Ventral belly margin
+    grad.addColorStop(0.50, '#ede7bc');   // Ventral belly center (creamy ivory)
+    grad.addColorStop(0.56, '#ded7a4');   // Ventral belly margin
+    grad.addColorStop(0.62, '#627a3c');   // Lower lateral flank
+    grad.addColorStop(0.78, '#48632e');   // Upper lateral flank
+    grad.addColorStop(1.0, '#364923');    // Dorsal spine (top)
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 1024, 1024);
 
-    // Micro-hexagonal scale pattern
-    const scaleSize = 8;
-    ctx.strokeStyle = 'rgba(20, 32, 12, 0.45)';
+    // 2. Ventral Belly Scutes (Transverse abdominal plates on bottom half: X ~ 430 to 594)
+    ctx.strokeStyle = 'rgba(110, 100, 70, 0.55)';
+    ctx.lineWidth = 2;
+    for (let y = 0; y < 1024; y += 22) {
+      ctx.beginPath();
+      ctx.moveTo(430, y);
+      ctx.lineTo(594, y);
+      ctx.stroke();
+
+      // Lateral dark spot pairs at edges of belly scutes
+      ctx.fillStyle = 'rgba(28, 38, 20, 0.65)';
+      ctx.fillRect(432, y + 4, 10, 8);
+      ctx.fillRect(582, y + 4, 10, 8);
+    }
+
+    // 3. Fine Reptilian Micro-Hexagonal Scales across dorsal and lateral regions
+    const scaleSize = 7;
+    ctx.strokeStyle = 'rgba(18, 28, 12, 0.4)';
     ctx.lineWidth = 1;
     for (let y = 0; y < 1024; y += scaleSize * 1.5) {
       for (let x = 0; x < 1024; x += scaleSize * 1.732) {
+        // Skip belly plates
+        if (x > 430 && x < 594) continue;
         const ox = (Math.floor(y / (scaleSize * 1.5)) % 2) * (scaleSize * 0.866);
         ctx.beginPath();
-        ctx.arc(x + ox, y, scaleSize * 0.75, 0, Math.PI * 2);
+        ctx.arc(x + ox, y, scaleSize * 0.72, 0, Math.PI * 2);
         ctx.stroke();
       }
     }
 
-    // Authentic Eunectes murinus black oval rosettes with yellow/ochre rings
-    for (let i = 0; i < 90; i++) {
-      const cx = (i * 127) % 1024;
-      const cy = (i * 193 + (i % 3) * 70) % 1024;
-      const rx = 24 + (i % 5) * 6;
-      const ry = 36 + (i % 7) * 8;
-      const rot = (i * 0.35);
+    // 4. Characteristic Eunectes murinus Dorsal Blotches (Large alternating velvety black ovals along the back: X near 0..180 and 840..1024)
+    const numDorsal = 28;
+    for (let i = 0; i < numDorsal; i++) {
+      const y = (i * 38) % 1024;
+      const x = (i % 2 === 0) ? (40 + (i % 3) * 20) : (940 - (i % 3) * 20);
+      const rx = 28 + (i % 4) * 5;
+      const ry = 42 + (i % 3) * 6;
+      const rot = (i % 2 === 0 ? 0.2 : -0.2);
 
-      // Yellow-ochre halo
+      // Jet black outer rim
       ctx.beginPath();
-      ctx.ellipse(cx, cy, rx + 6, ry + 6, rot, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(168, 142, 54, 0.55)';
+      ctx.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2);
+      ctx.fillStyle = '#11170d';
       ctx.fill();
 
-      // Jet black core
+      // Dark brown/ochre core with specular gleam
       ctx.beginPath();
-      ctx.ellipse(cx, cy, rx, ry, rot, 0, Math.PI * 2);
-      ctx.fillStyle = '#10150d';
+      ctx.ellipse(x, y, rx * 0.68, ry * 0.68, rot, 0, Math.PI * 2);
+      ctx.fillStyle = '#262415';
       ctx.fill();
+    }
 
-      // Specular scale gleam inside rosette
-      ctx.beginPath();
-      ctx.ellipse(cx - rx * 0.2, cy - ry * 0.2, rx * 0.3, ry * 0.3, rot, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-      ctx.fill();
+    // 5. Lateral Yellow/Orange Ocelli (Spots with black borders along flanks: X near 260..370 and 650..760)
+    const numLateral = 24;
+    for (let i = 0; i < numLateral; i++) {
+      const y = (i * 44 + 18) % 1024;
+      for (const flankX of [290 + (i % 2) * 35, 730 - (i % 2) * 35]) {
+        const r = 16 + (i % 3) * 4;
+
+        // Dark perimeter
+        ctx.beginPath();
+        ctx.arc(flankX, y, r + 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#141c10';
+        ctx.fill();
+
+        // Vivid yellow-ochre eye
+        ctx.beginPath();
+        ctx.arc(flankX, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = '#d49b28';
+        ctx.fill();
+
+        // Center pupil highlight
+        ctx.beginPath();
+        ctx.arc(flankX - 2, y - 2, r * 0.35, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 230, 140, 0.7)';
+        ctx.fill();
+      }
     }
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.wrapS = THREE.RepeatWrapping;
     tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(3, 14);
+    tex.repeat.set(1, 10);
     return tex;
   }
 
@@ -272,14 +317,11 @@ class GameAssets {
 
   loadAll(onProgress, onComplete) {
     const urls = {
-      snakeSkin: 'assets/art/swallowing_bulge.jpg',
-      snakeHead: 'assets/art/anaconda_model.jpg',
       caimanBoss: 'assets/art/black_caiman_boss.jpg',
       faunaSheet: 'assets/art/prey_fauna.jpg',
       terrainLevel1: 'assets/art/marajo_island.jpg',
       terrainLevel2: 'assets/art/tapajos_basin.jpg',
-      terrainLevel3: 'assets/art/flooded_forest.jpg',
-      hudFrame: 'assets/art/tactical_hud.jpg'
+      terrainLevel3: 'assets/art/flooded_forest.jpg'
     };
 
     let total = Object.keys(urls).length;

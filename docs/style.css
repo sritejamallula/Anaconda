@@ -732,7 +732,7 @@ html, body {
   line-height: 1.35;
 }
 
-/* Python HUD Avatar */
+/* Snake HUD Badge */
 .hud-header-row {
   display: flex;
   align-items: center;
@@ -742,13 +742,19 @@ html, body {
   padding-bottom: 6px;
 }
 
-.python-hud-avatar {
-  width: 44px;
-  height: 44px;
+.hud-snake-badge {
+  font-size: 26px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  object-fit: cover;
+  background: radial-gradient(circle, rgba(30, 90, 45, 0.8) 0%, rgba(10, 35, 18, 0.95) 100%);
   border: 2px solid #55ff99;
   box-shadow: 0 0 12px rgba(85, 255, 153, 0.45);
+  flex-shrink: 0;
 }
 
 /* Interactive Level Select Row */

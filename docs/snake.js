@@ -73,12 +73,12 @@ class AnacondaSnake {
     
     this.bodyMaterial = new THREE.MeshPhysicalMaterial({
       map: skinTex,
-      roughness: 0.16, // Wet reptile skin
-      metalness: 0.08,
-      clearcoat: 0.95, // High-gloss liquid water layer on scales
-      clearcoatRoughness: 0.06,
-      reflectivity: 0.88,
-      color: 0x82aa62
+      roughness: 0.18, // Wet reptile skin
+      metalness: 0.05,
+      clearcoat: 1.0, // High-gloss liquid water layer on scales
+      clearcoatRoughness: 0.05,
+      reflectivity: 0.92,
+      color: 0xffffff
     });
 
     // 2. Build Continuous Lofted Buffer Geometry (Zero disjoint cylinders/spheres!)

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Anaconda: Amazon River Apex 3D - Photorealistic Survival</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
   <!-- 3D WebGL Canvas Container -->
@@ -31,7 +31,7 @@
       <!-- Player Stats & Growth Progression with Python Avatar -->
       <div class="stats-panel interactive">
         <div class="hud-header-row">
-          <img src="assets/art/anaconda_model.jpg" class="python-hud-avatar" alt="Python / Anaconda">
+          <div class="hud-snake-badge">🐍</div>
           <div class="current-level-badge">
             <span id="level-name-val">Level 1: The Shallows (Nursery Mudbank)</span>
             <span id="growth-stage-badge">STAGE 1 &bull; JUVENILE</span>
@@ -108,9 +108,8 @@
     <!-- Bottom Notification Toast Stream -->
     <div id="notification-panel"></div>
 
-    <!-- Tactical Radar HUD (Bottom Right) with Photorealistic Ancient Wood-Vine Frame -->
+    <!-- Tactical Radar HUD (Bottom Right) -->
     <div class="radar-panel interactive">
-      <img src="assets/art/tactical_hud.jpg" class="radar-photo-frame" alt="HUD Frame">
       <canvas id="radar-canvas"></canvas>
       <div class="radar-border-ring"></div>
       <div class="radar-label">BIO-RADAR</div>
@@ -216,13 +215,13 @@
   </script>
 
   <!-- Engine Scripts -->
-  <script src="libs/three.min.js"></script>
-  <script src="assets.js"></script>
-  <script src="audio.js"></script>
-  <script src="radar.js"></script>
-  <script src="snake.js"></script>
-  <script src="world.js"></script>
-  <script src="entities.js"></script>
-  <script src="game.js"></script>
+  <script src="libs/three.min.js?v=4"></script>
+  <script src="assets.js?v=4"></script>
+  <script src="audio.js?v=4"></script>
+  <script src="radar.js?v=4"></script>
+  <script src="snake.js?v=4"></script>
+  <script src="world.js?v=4"></script>
+  <script src="entities.js?v=4"></script>
+  <script src="game.js?v=4"></script>
 </body>
 </html>
